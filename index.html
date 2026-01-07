@@ -788,7 +788,7 @@ var name = "영웅";`
                     `,
                     placeholder: "var myAge = ",
                     answer: "var myAge = 25",
-                    hint: "var 변수이름 = 값; 형태로 써요"
+                    hint: "var myAge = 25 처럼 써요. var(변수 선언) + 이름 + =(같다) + 값"
                 },
                 {
                     type: "game_code",
@@ -912,7 +912,7 @@ ellipse(90, 50, 40, 40);`,
                     `,
                     placeholder: "rect(",
                     answer: "rect(100, 100, 50, 30)",
-                    hint: "rect(x, y, 가로, 세로)"
+                    hint: "rect(x좌표, y좌표, 가로길이, 세로길이) 형태로 써요. 숫자를 순서대로 넣으면 돼요!"
                 },
                 {
                     type: "quiz",
@@ -989,7 +989,7 @@ ellipse(60, 50, 60, 60);`,
                     `,
                     placeholder: "if (score ",
                     answer: "if (score > 50)",
-                    hint: "> 는 '보다 크다'는 뜻이에요"
+                    hint: "if (score > 50) 처럼 써요. > 는 '보다 크다'는 뜻! 괄호 닫는 거 잊지 마세요."
                 },
                 {
                     type: "game_code",
@@ -1080,7 +1080,7 @@ ellipse(60, 50, 70, 70);`,
                     `,
                     placeholder: "var isJumping = ",
                     answer: "var isJumping = true",
-                    hint: "true는 따옴표 없이 써요"
+                    hint: "var isJumping = true 처럼 써요. true는 따옴표 없이! \"true\"가 아니라 그냥 true"
                 },
                 {
                     type: "game_code",
@@ -1175,7 +1175,7 @@ ellipse(xPositions[2], 50, 30, 30);`,
                     `,
                     placeholder: 'var colors = [',
                     answer: 'var colors = ["red", "blue", "green"]',
-                    hint: '문자는 따옴표로 감싸요: "red"'
+                    hint: 'var colors = ["red", "blue", "green"] 처럼 써요. 문자열은 "따옴표"로 감싸고, 쉼표로 구분!'
                 },
                 {
                     type: "game_code",
@@ -1261,7 +1261,7 @@ for (var i = 0; i < 5; i++) {
                     `,
                     placeholder: "for (var i = 0; i < ",
                     answer: "for (var i = 0; i < 3; i++)",
-                    hint: "3번이면 i < 3"
+                    hint: "for (var i = 0; i < 3; i++) 처럼 써요. 3번 반복이면 i < 3, 마지막에 i++ 잊지 마세요!"
                 },
                 {
                     type: "game_code",
@@ -1746,15 +1746,17 @@ pop();`,
     // CODE CHECKING
     // ==========================================
 
+    let wrongAttempts = 0;
+
     function checkCode() {
         const step = currentDay.steps[currentStep];
         const input = document.getElementById('code-input').value.trim();
         const result = document.getElementById('code-result');
         const editor = document.getElementById('code-editor');
 
-        // Normalize for comparison
-        const normalize = (s) => s.replace(/\s+/g, ' ').replace(/\s*;\s*$/, '').toLowerCase();
-        const isCorrect = normalize(input).includes(normalize(step.answer).replace(/\s*;\s*$/, ''));
+        // Normalize: remove all spaces, semicolons, and lowercase
+        const normalize = (s) => s.replace(/\s+/g, '').replace(/;/g, '').toLowerCase();
+        const isCorrect = normalize(input) === normalize(step.answer);
 
         if (isCorrect) {
             editor.classList.remove('wrong');
@@ -1762,6 +1764,7 @@ pop();`,
             result.className = 'code-result success';
             result.textContent = '✅ 정답이에요!';
             practiceCompleted = true;
+            wrongAttempts = 0;
 
             const practiceBtns = document.getElementById('practice-btns');
             practiceBtns.innerHTML = `
@@ -1769,11 +1772,36 @@ pop();`,
                 <button class="btn btn-primary" onclick="nextStep()">다음 →</button>
             `;
         } else {
+            wrongAttempts++;
             editor.classList.remove('correct');
             editor.classList.add('wrong');
             result.className = 'code-result error';
-            result.textContent = '❌ 다시 해보세요!';
+
+            if (wrongAttempts >= 2) {
+                result.innerHTML = '❌ 다시 해보세요! <button onclick="showAnswer()" style="background:#6366f1;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;margin-left:10px;">💡 정답 보기</button>';
+            } else {
+                result.textContent = '❌ 다시 해보세요!';
+            }
         }
+    }
+
+    function showAnswer() {
+        const step = currentDay.steps[currentStep];
+        const input = document.getElementById('code-input');
+        const result = document.getElementById('code-result');
+        const editor = document.getElementById('code-editor');
+
+        input.value = step.answer;
+        editor.classList.remove('wrong');
+        editor.classList.add('correct');
+        result.className = 'code-result success';
+        result.innerHTML = '📝 정답이에요! 위 코드를 잘 보고 이해해보세요.';
+
+        const practiceBtns = document.getElementById('practice-btns');
+        practiceBtns.innerHTML = `
+            <button class="btn btn-retry" onclick="retryPractice()">🔄 다시 해보기</button>
+            <button class="btn btn-primary" onclick="nextStep()">다음 →</button>
+        `;
     }
 
     function retryPractice() {
@@ -1786,6 +1814,7 @@ pop();`,
         editor.classList.remove('correct', 'wrong');
         result.className = 'code-result';
         result.textContent = '';
+        wrongAttempts = 0;
 
         const practiceBtns = document.getElementById('practice-btns');
         practiceBtns.innerHTML = `
