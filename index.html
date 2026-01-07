@@ -814,7 +814,8 @@ var gravity = 2;       // 중력`,
                         "100 = score",
                         "var = score 100"
                     ],
-                    correct: 1
+                    correct: 1,
+                    explanation: "var 변수이름 = 값; 순서로 써야 해요. var score = 100; 이 정답!"
                 }
             ]
         },
@@ -925,7 +926,8 @@ ellipse(90, 50, 40, 40);`,
                         "rect()",
                         "fill()"
                     ],
-                    correct: 1
+                    correct: 1,
+                    explanation: "draw()는 1초에 60번 반복 실행돼요. setup()은 시작할 때 딱 한 번만 실행되고, rect()와 fill()은 도형을 그리는 함수예요."
                 }
             ]
         },
@@ -1018,7 +1020,8 @@ ellipse(60, 50, 60, 60);`,
                         "x가 10보다 작을 때",
                         "항상"
                     ],
-                    correct: 1
+                    correct: 1,
+                    explanation: "> 는 '보다 크다'라는 뜻이에요. x > 10은 x가 10보다 클 때만 true가 돼요. x가 딱 10이면 false예요!"
                 }
             ]
         },
@@ -1115,7 +1118,8 @@ function keyReleased() {
                         "maybe",
                         "둘 다 Boolean"
                     ],
-                    correct: 2
+                    correct: 2,
+                    explanation: "Boolean은 true 또는 false 딱 두 가지만 있어요. maybe는 Boolean이 아니라 그냥 문자열이에요!"
                 }
             ]
         },
@@ -1202,7 +1206,8 @@ var trees_x = [100, 300, 500, 900, 1100];
                         "30",
                         "에러"
                     ],
-                    correct: 1
+                    correct: 1,
+                    explanation: "배열 인덱스는 0부터 시작해요! arr[0]=10, arr[1]=20, arr[2]=30. 그래서 arr[1]은 20이에요."
                 }
             ]
         },
@@ -1289,7 +1294,8 @@ for (var i = 0; i < trees_x.length; i++) {
                         "4번",
                         "무한"
                     ],
-                    correct: 1
+                    correct: 1,
+                    explanation: "i가 0, 1, 2일 때 실행되고, i가 3이 되면 i<3이 false가 돼서 멈춰요. 그래서 총 3번!"
                 }
             ]
         },
@@ -1393,7 +1399,8 @@ pop();`,
                         "translate()",
                         "shift()"
                     ],
-                    correct: 2
+                    correct: 2,
+                    explanation: "translate(x, y)는 좌표계를 이동시켜서 화면 스크롤 효과를 만들어요. push()와 pop()과 함께 사용해요!"
                 }
             ]
         }
@@ -1628,6 +1635,7 @@ pop();`,
 
         if (step.type === 'quiz') {
             html += `
+                <p style="font-size: 1.1rem; margin-bottom: 20px; color: var(--text);">${step.question}</p>
                 <div class="quiz-options" id="quiz-options">
                     ${step.options.map((opt, idx) => `
                         <div class="quiz-option" onclick="selectQuiz(${idx})" data-idx="${idx}">
@@ -1635,6 +1643,7 @@ pop();`,
                         </div>
                     `).join('')}
                 </div>
+                <div class="quiz-explanation" id="quiz-explanation" style="display:none; margin-top: 20px;"></div>
             `;
         }
 
@@ -1844,6 +1853,19 @@ pop();`,
                 opt.classList.add('wrong');
             }
         });
+
+        // Show explanation
+        const explanationDiv = document.getElementById('quiz-explanation');
+        if (explanationDiv && step.explanation) {
+            const isCorrect = idx === step.correct;
+            explanationDiv.innerHTML = `
+                <div class="highlight-box ${isCorrect ? 'success' : ''}">
+                    <strong>${isCorrect ? '✅ 정답!' : '❌ 오답!'}</strong><br>
+                    ${step.explanation}
+                </div>
+            `;
+            explanationDiv.style.display = 'block';
+        }
 
         // Enable next button
         document.getElementById('next-btn').disabled = false;
