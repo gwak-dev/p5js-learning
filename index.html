@@ -6,6 +6,13 @@
     <title>p5.js 게임 마스터</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <!-- CodeMirror -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/dracula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/edit/closebrackets.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -655,6 +662,39 @@
             padding: 10px;
             background: rgba(255,255,255,0.05);
             border-radius: 8px;
+        }
+
+        /* CodeMirror Custom Styles */
+        .CodeMirror {
+            height: auto;
+            min-height: 120px;
+            max-height: 300px;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 14px;
+            border-radius: 12px;
+            padding: 5px 0;
+        }
+
+        .CodeMirror-scroll {
+            min-height: 120px;
+            max-height: 300px;
+        }
+
+        .code-editor .CodeMirror {
+            border-radius: 12px 12px 0 0;
+        }
+
+        .code-editor.correct .CodeMirror {
+            border: 2px solid var(--success);
+        }
+
+        .code-editor.wrong .CodeMirror {
+            border: 2px solid var(--error);
+        }
+
+        .cm-wrapper {
+            border-radius: 12px;
+            overflow: hidden;
         }
     </style>
 </head>
@@ -1423,6 +1463,8 @@ pop();`,
     let quizAnswered = false;
     let practiceCompleted = false;
     let currentP5Instance = null;
+    let interactiveEditor = null;
+    let practiceEditor = null;
 
     // ==========================================
     // INIT
@@ -1548,9 +1590,16 @@ pop();`,
     }
 
     function renderStep() {
+        // Clean up previous instances
         if (currentP5Instance) {
             currentP5Instance.remove();
             currentP5Instance = null;
+        }
+        if (interactiveEditor) {
+            interactiveEditor = null;
+        }
+        if (practiceEditor) {
+            practiceEditor = null;
         }
 
         const step = currentDay.steps[currentStep];
@@ -1594,11 +1643,8 @@ pop();`,
                 <div class="code-preview-container">
                     <div class="code-section">
                         <div class="code-label">💻 코드 (수정해보세요!)</div>
-                        <div class="code-editor" id="code-editor">
-                            <textarea class="code-input" id="interactive-code"
-                                onfocus="document.getElementById('code-editor').classList.add('focused')"
-                                onblur="document.getElementById('code-editor').classList.remove('focused')"
-                            >${step.defaultCode}</textarea>
+                        <div class="cm-wrapper">
+                            <div id="interactive-code-editor"></div>
                         </div>
                     </div>
                     <div class="preview-section">
@@ -1609,7 +1655,7 @@ pop();`,
                 <div class="btn-group">
                     <button class="btn btn-run" onclick="runInteractiveCode()">▶ 실행</button>
                 </div>
-                <div class="editor-hint">💡 코드를 바꾸고 "실행"을 눌러 결과를 확인하세요!</div>
+                <div class="editor-hint">💡 코드를 바꾸고 "실행"을 눌러 결과를 확인하세요! (Tab으로 들여쓰기)</div>
             `;
         }
 
@@ -1618,11 +1664,7 @@ pop();`,
                 <div class="code-section">
                     <div class="code-label">💻 코드를 입력하세요:</div>
                     <div class="code-editor" id="code-editor">
-                        <textarea class="code-input" id="code-input"
-                            placeholder="${step.placeholder}"
-                            onfocus="document.getElementById('code-editor').classList.add('focused')"
-                            onblur="document.getElementById('code-editor').classList.remove('focused')"
-                        ></textarea>
+                        <div id="practice-code-editor"></div>
                         <div class="code-result" id="code-result"></div>
                     </div>
                 </div>
@@ -1676,11 +1718,48 @@ pop();`,
             }, 50);
         }
 
-        // Auto-run interactive code
+        // Initialize CodeMirror for interactive
         if (step.type === 'interactive') {
             setTimeout(() => {
-                runInteractiveCode();
-            }, 100);
+                const editorEl = document.getElementById('interactive-code-editor');
+                if (editorEl) {
+                    interactiveEditor = CodeMirror(editorEl, {
+                        value: step.defaultCode,
+                        mode: 'javascript',
+                        theme: 'dracula',
+                        lineNumbers: true,
+                        matchBrackets: true,
+                        autoCloseBrackets: true,
+                        indentUnit: 4,
+                        tabSize: 4,
+                        indentWithTabs: false,
+                        lineWrapping: true
+                    });
+                    runInteractiveCode();
+                }
+            }, 50);
+        }
+
+        // Initialize CodeMirror for practice
+        if (step.type === 'practice') {
+            setTimeout(() => {
+                const editorEl = document.getElementById('practice-code-editor');
+                if (editorEl) {
+                    practiceEditor = CodeMirror(editorEl, {
+                        value: '',
+                        mode: 'javascript',
+                        theme: 'dracula',
+                        lineNumbers: true,
+                        matchBrackets: true,
+                        autoCloseBrackets: true,
+                        indentUnit: 4,
+                        tabSize: 4,
+                        indentWithTabs: false,
+                        lineWrapping: true,
+                        placeholder: step.placeholder
+                    });
+                }
+            }, 50);
         }
     }
 
@@ -1709,7 +1788,7 @@ pop();`,
 
     function runInteractiveCode() {
         const step = currentDay.steps[currentStep];
-        const code = document.getElementById('interactive-code').value;
+        const code = interactiveEditor ? interactiveEditor.getValue() : '';
         const container = document.getElementById('interactive-preview');
 
         if (currentP5Instance) {
@@ -1759,7 +1838,7 @@ pop();`,
 
     function checkCode() {
         const step = currentDay.steps[currentStep];
-        const input = document.getElementById('code-input').value.trim();
+        const input = practiceEditor ? practiceEditor.getValue().trim() : '';
         const result = document.getElementById('code-result');
         const editor = document.getElementById('code-editor');
 
@@ -1796,11 +1875,12 @@ pop();`,
 
     function showAnswer() {
         const step = currentDay.steps[currentStep];
-        const input = document.getElementById('code-input');
         const result = document.getElementById('code-result');
         const editor = document.getElementById('code-editor');
 
-        input.value = step.answer;
+        if (practiceEditor) {
+            practiceEditor.setValue(step.answer);
+        }
         editor.classList.remove('wrong');
         editor.classList.add('correct');
         result.className = 'code-result success';
@@ -1816,10 +1896,12 @@ pop();`,
     function retryPractice() {
         const step = currentDay.steps[currentStep];
         const editor = document.getElementById('code-editor');
-        const input = document.getElementById('code-input');
         const result = document.getElementById('code-result');
 
-        input.value = '';
+        if (practiceEditor) {
+            practiceEditor.setValue('');
+            practiceEditor.focus();
+        }
         editor.classList.remove('correct', 'wrong');
         result.className = 'code-result';
         result.textContent = '';
@@ -1829,8 +1911,6 @@ pop();`,
         practiceBtns.innerHTML = `
             <button class="btn btn-check" onclick="checkCode()">확인하기 ✓</button>
         `;
-
-        input.focus();
     }
 
     // ==========================================
