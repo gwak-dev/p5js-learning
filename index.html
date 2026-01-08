@@ -740,9 +740,9 @@
         <div class="modal-content">
             <h3>⚙️ 설정</h3>
             <div class="setting-item">
-                <label>Claude API 키</label>
-                <p style="font-size:0.8rem;color:var(--muted);margin:5px 0;">AI 힌트 기능을 사용하려면 API 키가 필요해요.<br>키는 브라우저에만 저장되고 외부에 공개되지 않아요.</p>
-                <input type="password" id="api-key-input" placeholder="sk-ant-..." class="api-input">
+                <label>Gemini API 키 (무료)</label>
+                <p style="font-size:0.8rem;color:var(--muted);margin:5px 0;">AI 힌트 기능을 사용하려면 API 키가 필요해요.<br>키는 브라우저에만 저장되고 외부에 공개되지 않아요.<br><a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--primary);">👉 무료 API 키 받기</a></p>
+                <input type="password" id="api-key-input" placeholder="AIzaSy..." class="api-input">
                 <button class="btn btn-small" onclick="toggleApiKeyVisibility()">👁️ 보기</button>
             </div>
             <div class="modal-btns">
@@ -2284,7 +2284,7 @@ function keyPressed() {
     function openSettings() {
         const modal = document.getElementById('settings-modal');
         const input = document.getElementById('api-key-input');
-        const savedKey = localStorage.getItem('claude_api_key');
+        const savedKey = localStorage.getItem('gemini_api_key');
         if (savedKey) input.value = savedKey;
         modal.style.display = 'flex';
     }
@@ -2296,9 +2296,9 @@ function keyPressed() {
     function saveSettings() {
         const key = document.getElementById('api-key-input').value.trim();
         if (key) {
-            localStorage.setItem('claude_api_key', key);
+            localStorage.setItem('gemini_api_key', key);
         } else {
-            localStorage.removeItem('claude_api_key');
+            localStorage.removeItem('gemini_api_key');
         }
         closeSettings();
     }
@@ -2309,9 +2309,9 @@ function keyPressed() {
     }
 
     async function getAIHint(problemType) {
-        const apiKey = localStorage.getItem('claude_api_key');
+        const apiKey = localStorage.getItem('gemini_api_key');
         if (!apiKey) {
-            alert('API 키가 없습니다. 설정에서 Claude API 키를 입력해주세요.');
+            alert('API 키가 없습니다. 설정에서 Gemini API 키를 입력해주세요.');
             openSettings();
             return;
         }
@@ -2324,14 +2324,14 @@ function keyPressed() {
 
         hintContainer.innerHTML = '<div class="ai-loading">AI가 힌트를 생각하는 중...</div>';
 
-        const systemPrompt = `당신은 친절한 p5.js 프로그래밍 튜터입니다. 초보자에게 힌트를 줄 때:
+        const prompt = `당신은 친절한 p5.js 프로그래밍 튜터입니다. 초보자에게 힌트를 줄 때:
 - 정답을 직접 알려주지 마세요
 - 단계별로 생각할 수 있도록 유도하세요
 - 쉬운 한국어로 설명하세요
 - 2-3문장으로 짧게 힌트를 주세요
-- 격려하는 말투를 사용하세요`;
+- 격려하는 말투를 사용하세요
 
-        const userPrompt = `학생이 다음 문제를 풀고 있습니다:
+학생이 다음 문제를 풀고 있습니다:
 
 문제: ${step.question || step.instruction || step.title}
 ${step.hint ? `힌트: ${step.hint}` : ''}
@@ -2346,19 +2346,14 @@ ${userCode}
 학생이 막혀서 도움을 요청했습니다. 정답을 직접 알려주지 말고, 올바른 방향으로 생각할 수 있도록 힌트를 주세요.`;
 
         try {
-            const response = await fetch('https://api.anthropic.com/v1/messages', {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': apiKey,
-                    'anthropic-version': '2023-06-01',
-                    'anthropic-dangerous-direct-browser-access': 'true'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    model: 'claude-sonnet-4-20250514',
-                    max_tokens: 300,
-                    system: systemPrompt,
-                    messages: [{ role: 'user', content: userPrompt }]
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { maxOutputTokens: 300 }
                 })
             });
 
@@ -2368,7 +2363,7 @@ ${userCode}
             }
 
             const data = await response.json();
-            const hint = data.content[0].text;
+            const hint = data.candidates[0].content.parts[0].text;
 
             hintContainer.innerHTML = `<div class="ai-response"><strong>🤖 AI 힌트:</strong><br>${hint}</div>`;
         } catch (error) {
