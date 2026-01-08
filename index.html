@@ -2238,7 +2238,7 @@ function keyPressed() {
                 </div>
             `;
             if (!isLocked) {
-                item.onclick = () => { playSound('click'); startLesson(lesson.day); };
+                item.onclick = () => startLesson(lesson.day);
             }
             list.appendChild(item);
         });
@@ -2501,7 +2501,7 @@ function keyPressed() {
         }
 
         if (isCorrect) {
-            playSound('correct');
+            playSound('success');
             wrapper.classList.remove('wrong');
             wrapper.classList.add('correct');
             result.className = 'code-result success';
@@ -2512,7 +2512,6 @@ function keyPressed() {
                 <button class="btn btn-primary" onclick="nextStep()">다음 →</button>
             `;
         } else {
-            playSound('wrong');
             wrongAttempts++;
             wrapper.classList.add('wrong');
             result.className = 'code-result error';
@@ -2533,7 +2532,7 @@ function keyPressed() {
         let isCorrect = step.answerCheck ? step.answerCheck(code) : code.includes(step.targetCode);
 
         if (isCorrect) {
-            playSound('correct');
+            playSound('success');
             result.className = 'code-result success';
             result.textContent = '✅ 완성!';
 
@@ -2542,7 +2541,6 @@ function keyPressed() {
                 <button class="btn btn-primary" onclick="nextStep()">다음 →</button>
             `;
         } else {
-            playSound('wrong');
             wrongAttempts++;
             result.className = 'code-result error';
 
@@ -2596,7 +2594,6 @@ function keyPressed() {
     // ==========================================
     function selectQuiz(idx) {
         if (quizAnswered) return;
-        playSound('click');
 
         const step = currentDay.steps[currentStep];
         const options = document.querySelectorAll('.quiz-option');
@@ -2609,8 +2606,7 @@ function keyPressed() {
         });
 
         const isCorrect = idx === step.correct;
-        if (isCorrect) playSound('correct');
-        else playSound('wrong');
+        if (isCorrect) playSound('success');
 
         const explanationDiv = document.getElementById('quiz-explanation');
         if (explanationDiv && step.explanation) {
@@ -2630,7 +2626,6 @@ function keyPressed() {
     // NAVIGATION
     // ==========================================
     function nextStep() {
-        playSound('click');
         currentStep++;
         state.dayProgress[currentDay.day] = currentStep;
         saveState();
