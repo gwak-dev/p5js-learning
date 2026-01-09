@@ -20,15 +20,15 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --primary: #6366f1;
-            --secondary: #f472b6;
-            --accent: #fbbf24;
-            --success: #10b981;
+            --primary: #3b82f6;
+            --success: #22c55e;
             --error: #ef4444;
-            --bg: #0f172a;
-            --card: #1e293b;
-            --text: #f1f5f9;
-            --muted: #94a3b8;
+            --bg: #000;
+            --surface: #0a0a0a;
+            --card: #111;
+            --border: #222;
+            --text: #fff;
+            --muted: #888;
         }
 
         body {
@@ -40,40 +40,43 @@
 
         /* Header */
         .header {
-            background: var(--card);
-            padding: 15px 20px;
+            background: var(--surface);
+            padding: 12px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
             z-index: 100;
         }
 
         .logo {
-            font-size: 1.3rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text);
         }
 
         .stats {
             display: flex;
             gap: 20px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .stat { display: flex; align-items: center; gap: 5px; }
-        .stat-icon { font-size: 1.2rem; }
-        .stat-value { font-weight: 700; color: var(--accent); }
+        .stat-icon { font-size: 1rem; }
+        .stat-value { font-weight: 600; color: var(--primary); }
 
         /* Main Layout */
         .main {
-            max-width: 1000px;
+            max-width: 800px;
             margin: 0 auto;
             padding: 30px 20px;
+            margin-right: 380px;
+        }
+
+        @media (max-width: 1200px) {
+            .main { margin-right: 20px; max-width: 100%; }
         }
 
         /* Home Screen */
@@ -86,30 +89,34 @@
         }
 
         .welcome h1 {
-            font-size: 2rem;
-            margin-bottom: 10px;
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            font-weight: 600;
         }
 
         .welcome p {
             color: var(--muted);
+            font-size: 0.95rem;
         }
 
         /* Game Preview */
         .game-preview {
             background: var(--card);
-            border-radius: 20px;
+            border-radius: 12px;
             padding: 20px;
             margin-bottom: 30px;
             text-align: center;
+            border: 1px solid var(--border);
         }
 
         .game-preview h3 {
             margin-bottom: 15px;
-            color: var(--accent);
+            color: var(--text);
+            font-weight: 500;
         }
 
         .game-preview-canvas {
-            border-radius: 12px;
+            border-radius: 8px;
             overflow: hidden;
             display: inline-block;
         }
@@ -117,34 +124,34 @@
         .day-list {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 10px;
         }
 
         .day-item {
             background: var(--card);
-            border-radius: 16px;
-            padding: 20px;
+            border-radius: 10px;
+            padding: 16px 20px;
             cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid transparent;
+            transition: all 0.2s;
+            border: 1px solid var(--border);
             display: flex;
             align-items: center;
             gap: 15px;
         }
 
         .day-item:hover {
-            border-color: var(--primary);
-            transform: translateX(5px);
+            background: var(--surface);
+            border-color: #333;
         }
 
         .day-item.locked {
-            opacity: 0.5;
+            opacity: 0.4;
             cursor: not-allowed;
         }
 
         .day-item.locked:hover {
-            border-color: transparent;
-            transform: none;
+            background: var(--card);
+            border-color: var(--border);
         }
 
         .day-item.completed {
@@ -152,22 +159,23 @@
         }
 
         .day-icon {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 12px;
+            width: 44px;
+            height: 44px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
         }
 
         .day-info { flex: 1; }
-        .day-info h3 { margin-bottom: 5px; }
-        .day-info p { color: var(--muted); font-size: 0.9rem; }
+        .day-info h3 { margin-bottom: 4px; font-size: 1rem; font-weight: 500; }
+        .day-info p { color: var(--muted); font-size: 0.85rem; }
 
         .day-progress {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: var(--muted);
         }
 
@@ -178,45 +186,46 @@
         .lesson-header {
             display: flex;
             align-items: center;
-            gap: 15px;
-            margin-bottom: 30px;
+            gap: 12px;
+            margin-bottom: 25px;
         }
 
         .back-btn {
-            background: rgba(255,255,255,0.1);
-            border: none;
+            background: var(--card);
+            border: 1px solid var(--border);
             color: var(--text);
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 1.2rem;
-            transition: all 0.3s;
+            font-size: 1rem;
+            transition: all 0.2s;
         }
 
         .back-btn:hover {
-            background: rgba(255,255,255,0.2);
+            background: var(--surface);
+            border-color: #333;
         }
 
         .lesson-title { flex: 1; }
-        .lesson-title h2 { font-size: 1.3rem; margin-bottom: 3px; }
-        .lesson-title p { color: var(--muted); font-size: 0.85rem; }
+        .lesson-title h2 { font-size: 1.1rem; margin-bottom: 2px; font-weight: 500; }
+        .lesson-title p { color: var(--muted); font-size: 0.8rem; }
 
         /* Progress Bar */
-        .progress-container { margin-bottom: 30px; }
+        .progress-container { margin-bottom: 25px; }
 
         .progress-steps {
             display: flex;
-            gap: 8px;
-            margin-bottom: 10px;
+            gap: 4px;
+            margin-bottom: 8px;
         }
 
         .progress-step {
             flex: 1;
-            height: 6px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 3px;
-            transition: all 0.3s;
+            height: 3px;
+            background: var(--border);
+            border-radius: 2px;
+            transition: all 0.2s;
         }
 
         .progress-step.completed { background: var(--success); }
@@ -224,28 +233,30 @@
 
         .progress-text {
             text-align: center;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: var(--muted);
         }
 
         /* Content Card */
         .content-card {
             background: var(--card);
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
         }
 
         .step-emoji {
-            font-size: 3rem;
+            font-size: 2.5rem;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .step-title {
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
+            font-weight: 500;
         }
 
         .step-content {
@@ -253,33 +264,33 @@
             color: var(--muted);
         }
 
-        .step-content p { margin-bottom: 15px; }
+        .step-content p { margin-bottom: 12px; }
         .step-content strong { color: var(--text); }
 
         .highlight-box {
-            background: rgba(99, 102, 241, 0.15);
-            border-left: 4px solid var(--primary);
-            padding: 15px 20px;
-            border-radius: 0 12px 12px 0;
-            margin: 20px 0;
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 3px solid var(--primary);
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            margin: 16px 0;
         }
 
         .highlight-box.success {
-            background: rgba(16, 185, 129, 0.15);
+            background: rgba(34, 197, 94, 0.1);
             border-color: var(--success);
         }
 
         .highlight-box.warning {
-            background: rgba(251, 191, 36, 0.15);
-            border-color: var(--accent);
+            background: rgba(234, 179, 8, 0.1);
+            border-color: #eab308;
         }
 
         /* Code Section */
         .code-preview-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin: 20px 0;
+            gap: 12px;
+            margin: 16px 0;
         }
 
         @media (max-width: 700px) {
@@ -291,42 +302,45 @@
         .code-section { margin: 0; }
 
         .code-label {
-            font-size: 0.9rem;
-            color: var(--accent);
-            margin-bottom: 10px;
-            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-bottom: 8px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .code-readonly {
-            background: #0d1117;
-            border-radius: 12px;
-            padding: 15px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px;
             font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
-            font-size: 14px;
-            color: #e6edf3;
-            line-height: 1.8;
+            font-size: 13px;
+            color: #e0e0e0;
+            line-height: 1.7;
             overflow-x: auto;
             white-space: pre-wrap;
         }
 
         .code-editor {
-            background: #0d1117;
-            border-radius: 12px;
+            background: var(--surface);
+            border-radius: 8px;
             overflow: hidden;
-            border: 2px solid transparent;
-            transition: all 0.3s;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
         }
 
         .code-editor.correct { border-color: var(--success); }
         .code-editor.wrong { border-color: var(--error); }
 
         .code-result {
-            background: #161b22;
-            padding: 12px 15px;
+            background: var(--surface);
+            padding: 10px 14px;
             font-family: 'Monaco', monospace;
-            font-size: 13px;
+            font-size: 12px;
             color: var(--muted);
-            min-height: 40px;
+            min-height: 36px;
         }
 
         .code-result.success { color: var(--success); }
@@ -334,133 +348,149 @@
 
         /* Canvas Preview */
         .preview-section {
-            background: #0d1117;
-            border-radius: 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
             overflow: hidden;
         }
 
         .preview-label {
-            font-size: 0.9rem;
-            color: var(--success);
-            padding: 10px 15px;
-            background: #161b22;
-            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--muted);
+            padding: 8px 12px;
+            background: var(--card);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .preview-canvas-wrapper {
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 15px;
-            background: #1a1a2e;
-            min-height: 200px;
+            padding: 12px;
+            background: #0a0a0a;
+            min-height: 180px;
         }
 
         .preview-canvas-wrapper canvas {
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border-radius: 4px;
         }
 
         /* Target Preview */
         .target-preview {
-            background: rgba(251, 191, 36, 0.1);
-            border: 2px solid var(--accent);
-            border-radius: 16px;
-            padding: 20px;
-            margin: 20px 0;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin: 16px 0;
             text-align: center;
         }
 
         .target-preview h4 {
-            color: var(--accent);
-            margin-bottom: 15px;
+            color: var(--text);
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
 
         .target-canvas {
             display: inline-block;
-            border-radius: 8px;
+            border-radius: 6px;
             overflow: hidden;
         }
 
         /* Buttons */
         .btn-group {
             display: flex;
-            gap: 10px;
-            margin-top: 20px;
+            gap: 8px;
+            margin-top: 16px;
             flex-wrap: wrap;
         }
 
         .btn {
             flex: 1;
-            padding: 16px 24px;
+            padding: 12px 20px;
             border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 700;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s;
             font-family: 'Noto Sans KR', sans-serif;
-            min-width: 120px;
+            min-width: 100px;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background: var(--primary);
             color: white;
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(99, 102, 241, 0.4);
+            background: #2563eb;
         }
 
         .btn-check {
-            background: linear-gradient(135deg, var(--success), #059669);
+            background: var(--success);
             color: white;
+        }
+
+        .btn-check:hover {
+            background: #16a34a;
         }
 
         .btn-run {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
+            background: #333;
             color: white;
+            border: 1px solid #444;
+        }
+
+        .btn-run:hover {
+            background: #444;
         }
 
         .btn-retry {
-            background: rgba(99, 102, 241, 0.3);
-            color: var(--primary);
-            border: 2px solid var(--primary);
+            background: transparent;
+            color: var(--muted);
+            border: 1px solid var(--border);
+        }
+
+        .btn-retry:hover {
+            border-color: #444;
+            color: var(--text);
         }
 
         .btn:disabled {
-            opacity: 0.5;
+            opacity: 0.4;
             cursor: not-allowed;
-            transform: none !important;
         }
 
         /* Quiz */
         .quiz-options {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            margin: 20px 0;
+            gap: 8px;
+            margin: 16px 0;
         }
 
         .quiz-option {
-            background: rgba(255,255,255,0.05);
-            border: 2px solid rgba(255,255,255,0.1);
-            padding: 15px 20px;
-            border-radius: 12px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 14px 16px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s;
             text-align: left;
         }
 
-        .quiz-option:hover { border-color: var(--primary); }
+        .quiz-option:hover { border-color: #444; background: var(--surface); }
         .quiz-option.correct {
             border-color: var(--success);
-            background: rgba(16, 185, 129, 0.2);
+            background: rgba(34, 197, 94, 0.1);
         }
         .quiz-option.wrong {
             border-color: var(--error);
-            background: rgba(239, 68, 68, 0.2);
+            background: rgba(239, 68, 68, 0.1);
         }
 
         /* Reward Modal */
@@ -668,135 +698,141 @@
             background: rgba(255,255,255,0.1);
         }
 
-        /* AI Chat - Black Theme */
-        .ai-hint-btn {
-            background: #000;
-            color: white;
-            border: 1px solid #333;
-            padding: 10px 20px;
-            border-radius: 24px;
+        /* AI Chat - Fixed Right Sidebar */
+        .ai-sidebar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 360px;
+            height: 100vh;
+            background: var(--surface);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 200;
+            transition: transform 0.3s ease;
+        }
+        .ai-sidebar.collapsed {
+            transform: translateX(100%);
+        }
+        .ai-sidebar-toggle {
+            position: fixed;
+            right: 360px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 60px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-right: none;
+            border-radius: 8px 0 0 8px;
             cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 500;
-            display: inline-flex;
+            display: flex;
             align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
+            justify-content: center;
+            color: var(--muted);
+            font-size: 0.9rem;
+            z-index: 201;
+            transition: all 0.3s ease;
         }
-        .ai-hint-btn:hover {
-            background: #1a1a1a;
-            border-color: #444;
+        .ai-sidebar.collapsed + .ai-sidebar-toggle,
+        .ai-sidebar-toggle.collapsed {
+            right: 0;
         }
-        .ai-chat-container {
-            background: #000;
-            border-radius: 12px;
-            margin-top: 20px;
-            overflow: hidden;
-            border: 1px solid #222;
+        .ai-sidebar-toggle:hover {
+            background: var(--surface);
+            color: var(--text);
         }
         .ai-chat-header {
-            background: #0a0a0a;
-            padding: 14px 18px;
+            background: var(--card);
+            padding: 14px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #222;
+            border-bottom: 1px solid var(--border);
         }
         .ai-chat-header-title {
             display: flex;
             align-items: center;
             gap: 10px;
             font-weight: 500;
-            color: #fff;
+            font-size: 0.95rem;
+            color: var(--text);
         }
         .ai-chat-header-title .gemini-icon {
-            width: 28px;
-            height: 28px;
+            width: 24px;
+            height: 24px;
             background: linear-gradient(135deg, #4285f4, #9b72cb, #d96570);
             border-radius: 50%;
         }
-        .ai-chat-close {
-            background: none;
-            border: none;
-            color: #666;
-            cursor: pointer;
-            font-size: 1.3rem;
-            padding: 4px 8px;
-            border-radius: 50%;
-            transition: all 0.2s;
-        }
-        .ai-chat-close:hover {
-            background: #1a1a1a;
-            color: #fff;
-        }
         .ai-chat-messages {
-            max-height: 400px;
+            flex: 1;
             overflow-y: auto;
-            padding: 20px;
-            background: #000;
+            padding: 16px;
+            background: var(--bg);
         }
         .ai-chat-message {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             display: flex;
-            gap: 12px;
+            gap: 10px;
         }
         .ai-chat-message.user {
             flex-direction: row-reverse;
         }
         .ai-chat-message .avatar {
-            width: 36px;
-            height: 36px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             flex-shrink: 0;
-        }
-        .ai-chat-message.user .avatar {
-            background: #333;
+            font-size: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+        }
+        .ai-chat-message.user .avatar {
+            background: #333;
         }
         .ai-chat-message.ai .avatar {
             background: linear-gradient(135deg, #4285f4, #9b72cb, #d96570);
         }
         .ai-chat-message .bubble {
-            padding: 14px 18px;
-            border-radius: 16px;
+            padding: 10px 14px;
+            border-radius: 12px;
             max-width: 85%;
-            line-height: 1.7;
-            font-size: 0.95rem;
+            line-height: 1.6;
+            font-size: 0.9rem;
         }
         .ai-chat-message.user .bubble {
-            background: #1a1a1a;
-            color: #fff;
-            border-radius: 16px 16px 4px 16px;
+            background: var(--card);
+            color: var(--text);
+            border-radius: 12px 12px 4px 12px;
         }
         .ai-chat-message.ai .bubble {
-            background: #111;
-            color: #e0e0e0;
-            border-radius: 16px 16px 16px 4px;
-            border: 1px solid #222;
+            background: var(--surface);
+            color: #ccc;
+            border-radius: 12px 12px 12px 4px;
+            border: 1px solid var(--border);
         }
         .ai-chat-input-area {
-            padding: 16px 18px;
-            background: #0a0a0a;
-            border-top: 1px solid #222;
+            padding: 12px;
+            background: var(--card);
+            border-top: 1px solid var(--border);
         }
         .ai-chat-input-wrapper {
             display: flex;
             align-items: center;
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 24px;
-            padding: 4px 4px 4px 18px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 4px 4px 4px 14px;
         }
         .ai-chat-input {
             flex: 1;
-            padding: 12px 0;
+            padding: 10px 0;
             border: none;
             background: transparent;
-            color: #fff;
-            font-size: 0.95rem;
+            color: var(--text);
+            font-size: 0.9rem;
         }
         .ai-chat-input:focus {
             outline: none;
@@ -805,39 +841,39 @@
             color: #666;
         }
         .ai-chat-send {
-            background: #fff;
+            background: var(--primary);
             border: none;
-            color: #000;
-            width: 38px;
-            height: 38px;
+            color: white;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.1rem;
+            font-size: 0.9rem;
             transition: all 0.2s;
         }
         .ai-chat-send:hover {
-            background: #e0e0e0;
+            background: #2563eb;
         }
         .ai-chat-send:disabled {
             background: #333;
-            color: #666;
             cursor: not-allowed;
         }
         .ai-loading {
             display: flex;
             align-items: center;
-            gap: 12px;
-            color: #666;
-            padding: 10px 0;
+            gap: 10px;
+            color: var(--muted);
+            padding: 8px 0;
+            font-size: 0.85rem;
         }
         .ai-loading::before {
             content: '';
-            width: 20px;
-            height: 20px;
-            border: 2px solid #fff;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--primary);
             border-top-color: transparent;
             border-radius: 50%;
             animation: spin 1s linear infinite;
@@ -845,6 +881,24 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        @media (max-width: 1200px) {
+            .ai-sidebar {
+                transform: translateX(100%);
+            }
+            .ai-sidebar.open {
+                transform: translateX(0);
+            }
+            .ai-sidebar-toggle {
+                right: 0;
+            }
+            .ai-sidebar.open + .ai-sidebar-toggle {
+                right: 360px;
+            }
+        }
+
+        /* Hide old AI hint button */
+        .ai-hint-btn { display: none; }
+        #ai-hint-container { display: none; }
     </style>
 </head>
 <body>
@@ -934,6 +988,29 @@
             </div>
         </div>
     </main>
+
+    <!-- Fixed AI Sidebar -->
+    <div class="ai-sidebar" id="ai-sidebar">
+        <div class="ai-chat-header">
+            <div class="ai-chat-header-title">
+                <div class="gemini-icon"></div>
+                <span>AI 튜터</span>
+            </div>
+        </div>
+        <div class="ai-chat-messages" id="ai-chat-messages">
+            <div class="ai-chat-message ai">
+                <div class="avatar"></div>
+                <div class="bubble">안녕하세요! 코드에 대해 궁금한 점이 있으면 질문해주세요. 🤗</div>
+            </div>
+        </div>
+        <div class="ai-chat-input-area">
+            <div class="ai-chat-input-wrapper">
+                <input type="text" class="ai-chat-input" id="ai-chat-input" placeholder="질문을 입력하세요..." onkeypress="if(event.key==='Enter')sendAIMessage()">
+                <button class="ai-chat-send" onclick="sendAIMessage()">➤</button>
+            </div>
+        </div>
+    </div>
+    <button class="ai-sidebar-toggle" id="ai-sidebar-toggle" onclick="toggleAISidebar()">◀</button>
 
     <!-- Reward Modal -->
     <div class="reward-overlay" id="reward-overlay">
@@ -2396,6 +2473,12 @@ function keyPressed() {
         renderHome();
         updateStats();
         drawFinalGamePreview();
+        checkApiKey();
+
+        // Auto-collapse sidebar on mobile
+        if (window.innerWidth <= 1200) {
+            toggleAISidebar();
+        }
     }
 
     function loadState() {
@@ -2439,11 +2522,45 @@ function keyPressed() {
         input.type = input.type === 'password' ? 'text' : 'password';
     }
 
-    // AI Chat
+    // AI Sidebar
     let aiChatHistory = [];
-    let aiChatVisible = false;
+    let aiSidebarCollapsed = false;
 
-    function openAIChat() {
+    function toggleAISidebar() {
+        const sidebar = document.getElementById('ai-sidebar');
+        const toggle = document.getElementById('ai-sidebar-toggle');
+        const main = document.querySelector('.main');
+
+        aiSidebarCollapsed = !aiSidebarCollapsed;
+
+        if (aiSidebarCollapsed) {
+            sidebar.classList.add('collapsed');
+            toggle.classList.add('collapsed');
+            toggle.innerHTML = '▶';
+            main.style.marginRight = '20px';
+        } else {
+            sidebar.classList.remove('collapsed');
+            toggle.classList.remove('collapsed');
+            toggle.innerHTML = '◀';
+            main.style.marginRight = '380px';
+        }
+    }
+
+    // Check API key on load and show warning if needed
+    function checkApiKey() {
+        const apiKey = localStorage.getItem('gemini_api_key');
+        const messagesDiv = document.getElementById('ai-chat-messages');
+        if (!apiKey && messagesDiv) {
+            messagesDiv.innerHTML = `
+                <div class="ai-chat-message ai">
+                    <div class="avatar"></div>
+                    <div class="bubble">AI 기능을 사용하려면 설정에서 Gemini API 키를 입력해주세요! ⚙️<br><br><button onclick="openSettings()" style="background:var(--primary);border:none;color:white;padding:8px 16px;border-radius:6px;cursor:pointer;">설정 열기</button></div>
+                </div>
+            `;
+        }
+    }
+
+    async function sendAIMessage() {
         const apiKey = localStorage.getItem('gemini_api_key');
         if (!apiKey) {
             alert('API 키가 없습니다. 설정에서 Gemini API 키를 입력해주세요.');
@@ -2451,51 +2568,6 @@ function keyPressed() {
             return;
         }
 
-        const container = document.getElementById('ai-hint-container');
-        if (!container) return;
-
-        if (aiChatVisible) {
-            closeAIChat();
-            return;
-        }
-
-        aiChatHistory = [];
-        aiChatVisible = true;
-
-        container.innerHTML = `
-            <div class="ai-chat-container" id="ai-chat-box">
-                <div class="ai-chat-header">
-                    <div class="ai-chat-header-title">
-                        <div class="gemini-icon"></div>
-                        <span>Gemini</span>
-                    </div>
-                    <button class="ai-chat-close" onclick="closeAIChat()">✕</button>
-                </div>
-                <div class="ai-chat-messages" id="ai-chat-messages">
-                    <div class="ai-chat-message ai">
-                        <div class="avatar"></div>
-                        <div class="bubble">안녕하세요! 코드에 대해 궁금한 점이 있으면 질문해주세요.</div>
-                    </div>
-                </div>
-                <div class="ai-chat-input-area">
-                    <div class="ai-chat-input-wrapper">
-                        <input type="text" class="ai-chat-input" id="ai-chat-input" placeholder="메시지를 입력하세요..." onkeypress="if(event.key==='Enter')sendAIMessage()">
-                        <button class="ai-chat-send" onclick="sendAIMessage()">➤</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        document.getElementById('ai-chat-input').focus();
-    }
-
-    function closeAIChat() {
-        const container = document.getElementById('ai-hint-container');
-        if (container) container.innerHTML = '';
-        aiChatVisible = false;
-        aiChatHistory = [];
-    }
-
-    async function sendAIMessage() {
         const input = document.getElementById('ai-chat-input');
         const messagesDiv = document.getElementById('ai-chat-messages');
         const userMessage = input.value.trim();
@@ -2587,9 +2659,9 @@ ${userCode}
         }
     }
 
-    // Keep old function name for button compatibility
+    // Legacy function - show sidebar on hint request
     function getAIHint(problemType) {
-        openAIChat();
+        if (aiSidebarCollapsed) toggleAISidebar();
     }
 
     function checkStreak() {
