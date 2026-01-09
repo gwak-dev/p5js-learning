@@ -68,15 +68,24 @@
         .stat-value { font-weight: 600; color: var(--primary); }
 
         /* Main Layout */
+        .main-wrapper {
+            margin-right: 360px;
+            transition: margin-right 0.3s ease;
+        }
+
+        .main-wrapper.sidebar-collapsed {
+            margin-right: 0;
+        }
+
         .main {
             max-width: 800px;
             margin: 0 auto;
             padding: 30px 20px;
-            margin-right: 380px;
         }
 
         @media (max-width: 1200px) {
-            .main { margin-right: 20px; max-width: 100%; }
+            .main-wrapper { margin-right: 0; }
+            .main { max-width: 100%; }
         }
 
         /* Home Screen */
@@ -937,6 +946,7 @@
     </div>
 
 
+    <div class="main-wrapper" id="main-wrapper">
     <main class="main">
         <!-- Home Screen -->
         <div class="home" id="home-screen">
@@ -988,6 +998,7 @@
             </div>
         </div>
     </main>
+    </div>
 
     <!-- Fixed AI Sidebar -->
     <div class="ai-sidebar" id="ai-sidebar">
@@ -2529,7 +2540,7 @@ function keyPressed() {
     function toggleAISidebar() {
         const sidebar = document.getElementById('ai-sidebar');
         const toggle = document.getElementById('ai-sidebar-toggle');
-        const main = document.querySelector('.main');
+        const wrapper = document.getElementById('main-wrapper');
 
         aiSidebarCollapsed = !aiSidebarCollapsed;
 
@@ -2537,12 +2548,12 @@ function keyPressed() {
             sidebar.classList.add('collapsed');
             toggle.classList.add('collapsed');
             toggle.innerHTML = '▶';
-            main.style.marginRight = '20px';
+            wrapper.classList.add('sidebar-collapsed');
         } else {
             sidebar.classList.remove('collapsed');
             toggle.classList.remove('collapsed');
             toggle.innerHTML = '◀';
-            main.style.marginRight = '380px';
+            wrapper.classList.remove('sidebar-collapsed');
         }
     }
 
