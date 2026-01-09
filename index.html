@@ -2357,18 +2357,22 @@ ${userCode}
                 })
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error?.message || 'API 요청 실패');
+            const data = await response.json();
+            console.log('API Response:', data);
+
+            if (!response.ok || data.error) {
+                throw new Error(data.error?.message || 'API 요청 실패');
             }
 
-            const data = await response.json();
-            const hint = data.candidates[0].content.parts[0].text;
+            const hint = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!hint) {
+                throw new Error('응답에서 힌트를 찾을 수 없습니다');
+            }
 
             hintContainer.innerHTML = `<div class="ai-response"><strong>🤖 AI 힌트:</strong><br>${hint}</div>`;
         } catch (error) {
             console.error('AI Hint Error:', error);
-            hintContainer.innerHTML = `<div class="ai-response" style="border-color: var(--error);">❌ 오류: ${error.message}<br><small>API 키를 확인하거나 다시 시도해주세요.</small></div>`;
+            hintContainer.innerHTML = `<div class="ai-response" style="border-color: var(--error);">❌ 오류: ${error.message}<br><small>브라우저 콘솔(F12)에서 자세한 내용을 확인하세요.</small></div>`;
         }
     }
 
