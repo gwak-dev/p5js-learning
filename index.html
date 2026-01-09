@@ -665,146 +665,181 @@
             background: rgba(255,255,255,0.1);
         }
 
-        /* AI Chat Sidebar */
+        /* AI Chat - Gemini Style */
         .ai-hint-btn {
-            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            background: #1a73e8;
             color: white;
             border: none;
-            padding: 10px 15px;
-            border-radius: 8px;
+            padding: 10px 20px;
+            border-radius: 24px;
             cursor: pointer;
             font-size: 0.9rem;
-            display: flex;
+            font-weight: 500;
+            display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
+            transition: background 0.2s, box-shadow 0.2s;
         }
         .ai-hint-btn:hover {
-            transform: scale(1.02);
+            background: #1557b0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
-        .ai-chat-sidebar {
-            position: fixed;
-            right: -400px;
-            top: 0;
-            width: 380px;
-            height: 100vh;
-            background: var(--card);
-            border-left: 1px solid rgba(139,92,246,0.3);
-            display: flex;
-            flex-direction: column;
-            z-index: 1001;
-            transition: right 0.3s ease;
+        .ai-chat-container {
+            background: #1e1e1e;
+            border-radius: 16px;
+            margin-top: 20px;
+            overflow: hidden;
+            border: 1px solid #3c4043;
         }
-        .ai-chat-sidebar.open {
-            right: 0;
+        .ai-chat-container.hidden {
+            display: none;
         }
         .ai-chat-header {
-            background: linear-gradient(135deg, #8b5cf6, #6366f1);
-            padding: 15px 20px;
-            font-weight: 600;
+            background: #2d2d2d;
+            padding: 12px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid #3c4043;
+        }
+        .ai-chat-header-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            color: #e8eaed;
+        }
+        .ai-chat-header-title .gemini-icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #4285f4, #9b72cb, #d96570);
+            border-radius: 50%;
         }
         .ai-chat-close {
             background: none;
             border: none;
-            color: white;
+            color: #9aa0a6;
             cursor: pointer;
-            font-size: 1.4rem;
+            font-size: 1.2rem;
+            padding: 4px 8px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        .ai-chat-close:hover {
+            background: #3c4043;
+            color: #e8eaed;
         }
         .ai-chat-messages {
-            flex: 1;
+            max-height: 400px;
             overflow-y: auto;
-            padding: 20px;
+            padding: 16px;
+            background: #1e1e1e;
         }
         .ai-chat-message {
-            margin-bottom: 15px;
-            line-height: 1.7;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 12px;
         }
         .ai-chat-message.user {
-            text-align: right;
+            flex-direction: row-reverse;
+        }
+        .ai-chat-message .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .ai-chat-message.user .avatar {
+            background: #5f6368;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        .ai-chat-message.ai .avatar {
+            background: linear-gradient(135deg, #4285f4, #9b72cb, #d96570);
+        }
+        .ai-chat-message .bubble {
+            padding: 12px 16px;
+            border-radius: 20px;
+            max-width: 85%;
+            line-height: 1.6;
+            font-size: 0.95rem;
         }
         .ai-chat-message.user .bubble {
-            background: var(--primary);
-            color: white;
-            display: inline-block;
-            padding: 12px 16px;
-            border-radius: 18px 18px 5px 18px;
-            max-width: 85%;
-            text-align: left;
+            background: #303134;
+            color: #e8eaed;
+            border-radius: 20px 20px 4px 20px;
         }
         .ai-chat-message.ai .bubble {
-            background: rgba(139,92,246,0.15);
-            display: inline-block;
-            padding: 12px 16px;
-            border-radius: 18px 18px 18px 5px;
-            max-width: 95%;
+            background: #2d2d2d;
+            color: #e8eaed;
+            border-radius: 20px 20px 20px 4px;
         }
         .ai-chat-input-area {
-            border-top: 1px solid rgba(255,255,255,0.1);
-            padding: 15px;
+            padding: 12px 16px;
+            background: #2d2d2d;
+            border-top: 1px solid #3c4043;
+        }
+        .ai-chat-input-wrapper {
             display: flex;
-            gap: 10px;
+            align-items: center;
+            background: #3c4043;
+            border-radius: 24px;
+            padding: 4px 4px 4px 16px;
         }
         .ai-chat-input {
             flex: 1;
-            padding: 12px 18px;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 25px;
-            background: var(--bg);
-            color: var(--text);
+            padding: 10px 0;
+            border: none;
+            background: transparent;
+            color: #e8eaed;
             font-size: 0.95rem;
         }
         .ai-chat-input:focus {
             outline: none;
-            border-color: var(--primary);
+        }
+        .ai-chat-input::placeholder {
+            color: #9aa0a6;
         }
         .ai-chat-send {
-            background: var(--primary);
+            background: #8ab4f8;
             border: none;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 25px;
+            color: #1e1e1e;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
             cursor: pointer;
-            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
         }
-        .ai-chat-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            display: none;
+        .ai-chat-send:hover {
+            background: #aecbfa;
         }
-        .ai-chat-overlay.open {
-            display: block;
+        .ai-chat-send:disabled {
+            background: #5f6368;
+            cursor: not-allowed;
         }
         .ai-loading {
             display: flex;
             align-items: center;
-            gap: 10px;
-            color: var(--muted);
-            padding: 10px;
+            gap: 12px;
+            color: #9aa0a6;
+            padding: 8px 0;
         }
         .ai-loading::before {
             content: '';
-            width: 16px;
-            height: 16px;
-            border: 2px solid var(--primary);
+            width: 20px;
+            height: 20px;
+            border: 2px solid #8ab4f8;
             border-top-color: transparent;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
-        }
-        @media (max-width: 500px) {
-            .ai-chat-sidebar {
-                width: 100%;
-                right: -100%;
-            }
         }
     </style>
 </head>
@@ -843,23 +878,6 @@
         </div>
     </div>
 
-    <!-- AI Chat Sidebar -->
-    <div class="ai-chat-overlay" id="ai-chat-overlay" onclick="closeAIChat()"></div>
-    <div class="ai-chat-sidebar" id="ai-chat-sidebar">
-        <div class="ai-chat-header">
-            <span>🤖 AI 튜터</span>
-            <button class="ai-chat-close" onclick="closeAIChat()">✕</button>
-        </div>
-        <div class="ai-chat-messages" id="ai-chat-messages">
-            <div class="ai-chat-message ai">
-                <div class="bubble">안녕하세요! 질문이 있으면 말씀해주세요 😊</div>
-            </div>
-        </div>
-        <div class="ai-chat-input-area">
-            <input type="text" class="ai-chat-input" id="ai-chat-input" placeholder="질문을 입력하세요..." onkeypress="if(event.key==='Enter')sendAIMessage()">
-            <button class="ai-chat-send" onclick="sendAIMessage()">전송</button>
-        </div>
-    </div>
 
     <main class="main">
         <!-- Home Screen -->
@@ -2419,6 +2437,7 @@ function keyPressed() {
 
     // AI Chat
     let aiChatHistory = [];
+    let aiChatVisible = false;
 
     function openAIChat() {
         const apiKey = localStorage.getItem('gemini_api_key');
@@ -2428,20 +2447,47 @@ function keyPressed() {
             return;
         }
 
+        const container = document.getElementById('ai-hint-container');
+        if (!container) return;
+
+        if (aiChatVisible) {
+            closeAIChat();
+            return;
+        }
+
         aiChatHistory = [];
-        document.getElementById('ai-chat-sidebar').classList.add('open');
-        document.getElementById('ai-chat-overlay').classList.add('open');
-        document.getElementById('ai-chat-messages').innerHTML = `
-            <div class="ai-chat-message ai">
-                <div class="bubble">안녕하세요! 질문이 있으면 말씀해주세요 😊</div>
+        aiChatVisible = true;
+
+        container.innerHTML = `
+            <div class="ai-chat-container" id="ai-chat-box">
+                <div class="ai-chat-header">
+                    <div class="ai-chat-header-title">
+                        <div class="gemini-icon"></div>
+                        <span>Gemini</span>
+                    </div>
+                    <button class="ai-chat-close" onclick="closeAIChat()">✕</button>
+                </div>
+                <div class="ai-chat-messages" id="ai-chat-messages">
+                    <div class="ai-chat-message ai">
+                        <div class="avatar"></div>
+                        <div class="bubble">안녕하세요! 코드에 대해 궁금한 점이 있으면 질문해주세요.</div>
+                    </div>
+                </div>
+                <div class="ai-chat-input-area">
+                    <div class="ai-chat-input-wrapper">
+                        <input type="text" class="ai-chat-input" id="ai-chat-input" placeholder="메시지를 입력하세요..." onkeypress="if(event.key==='Enter')sendAIMessage()">
+                        <button class="ai-chat-send" onclick="sendAIMessage()">➤</button>
+                    </div>
+                </div>
             </div>
         `;
         document.getElementById('ai-chat-input').focus();
     }
 
     function closeAIChat() {
-        document.getElementById('ai-chat-sidebar').classList.remove('open');
-        document.getElementById('ai-chat-overlay').classList.remove('open');
+        const container = document.getElementById('ai-hint-container');
+        if (container) container.innerHTML = '';
+        aiChatVisible = false;
         aiChatHistory = [];
     }
 
@@ -2455,13 +2501,14 @@ function keyPressed() {
         // Add user message to UI
         messagesDiv.innerHTML += `
             <div class="ai-chat-message user">
+                <div class="avatar">👤</div>
                 <div class="bubble">${escapeHtml(userMessage)}</div>
             </div>
         `;
         input.value = '';
 
         // Add loading indicator
-        messagesDiv.innerHTML += `<div class="ai-loading" id="ai-loading">생각하는 중...</div>`;
+        messagesDiv.innerHTML += `<div class="ai-loading" id="ai-loading">Gemini가 생각하는 중...</div>`;
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
         // Build context
@@ -2518,6 +2565,7 @@ ${userCode}
             // Add AI message to UI
             messagesDiv.innerHTML += `
                 <div class="ai-chat-message ai">
+                    <div class="avatar"></div>
                     <div class="bubble">${aiResponse.replace(/\n/g, '<br>')}</div>
                 </div>
             `;
@@ -2528,7 +2576,8 @@ ${userCode}
             document.getElementById('ai-loading')?.remove();
             messagesDiv.innerHTML += `
                 <div class="ai-chat-message ai">
-                    <div class="bubble" style="border: 1px solid var(--error);">❌ 오류: ${error.message}</div>
+                    <div class="avatar"></div>
+                    <div class="bubble" style="border: 1px solid #f28b82;">❌ 오류: ${error.message}</div>
                 </div>
             `;
         }
