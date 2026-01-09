@@ -665,7 +665,7 @@
             background: rgba(255,255,255,0.1);
         }
 
-        /* AI Hint */
+        /* AI Chat */
         .ai-hint-btn {
             background: linear-gradient(135deg, #8b5cf6, #6366f1);
             color: white;
@@ -685,28 +685,99 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
-        .ai-response {
-            background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(99,102,241,0.1));
+        .ai-chat-container {
+            background: var(--card);
             border: 1px solid rgba(139,92,246,0.3);
-            border-radius: 10px;
-            padding: 15px;
+            border-radius: 15px;
             margin-top: 15px;
-            font-size: 0.95rem;
+            overflow: hidden;
+        }
+        .ai-chat-header {
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            padding: 10px 15px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .ai-chat-close {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        .ai-chat-messages {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 15px;
+        }
+        .ai-chat-message {
+            margin-bottom: 12px;
             line-height: 1.6;
         }
-        .ai-response strong {
-            color: #a78bfa;
+        .ai-chat-message.user {
+            text-align: right;
+        }
+        .ai-chat-message.user .bubble {
+            background: var(--primary);
+            color: white;
+            display: inline-block;
+            padding: 10px 15px;
+            border-radius: 15px 15px 5px 15px;
+            max-width: 80%;
+            text-align: left;
+        }
+        .ai-chat-message.ai .bubble {
+            background: rgba(139,92,246,0.15);
+            display: inline-block;
+            padding: 10px 15px;
+            border-radius: 15px 15px 15px 5px;
+            max-width: 90%;
+        }
+        .ai-chat-input-area {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        .ai-chat-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+        .ai-chat-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .ai-chat-send {
+            background: var(--primary);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .ai-chat-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         .ai-loading {
             display: flex;
             align-items: center;
             gap: 10px;
             color: var(--muted);
+            padding: 10px;
         }
         .ai-loading::before {
             content: '';
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             border: 2px solid var(--primary);
             border-top-color: transparent;
             border-radius: 50%;
@@ -2308,7 +2379,11 @@ function keyPressed() {
         input.type = input.type === 'password' ? 'text' : 'password';
     }
 
-    async function getAIHint(problemType) {
+    // AI Chat
+    let aiChatHistory = [];
+    let aiChatOpen = false;
+
+    function openAIChat() {
         const apiKey = localStorage.getItem('gemini_api_key');
         if (!apiKey) {
             alert('API 키가 없습니다. 설정에서 Gemini API 키를 입력해주세요.');
@@ -2316,64 +2391,132 @@ function keyPressed() {
             return;
         }
 
+        const container = document.getElementById('ai-hint-container');
+        if (!container) return;
+
+        aiChatHistory = [];
+        aiChatOpen = true;
+
+        container.innerHTML = `
+            <div class="ai-chat-container">
+                <div class="ai-chat-header">
+                    <span>🤖 AI 튜터</span>
+                    <button class="ai-chat-close" onclick="closeAIChat()">✕</button>
+                </div>
+                <div class="ai-chat-messages" id="ai-chat-messages">
+                    <div class="ai-chat-message ai">
+                        <div class="bubble">안녕하세요! 무엇이 어려우신가요? 질문해주세요! 😊</div>
+                    </div>
+                </div>
+                <div class="ai-chat-input-area">
+                    <input type="text" class="ai-chat-input" id="ai-chat-input" placeholder="질문을 입력하세요..." onkeypress="if(event.key==='Enter')sendAIMessage()">
+                    <button class="ai-chat-send" onclick="sendAIMessage()">전송</button>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('ai-chat-input').focus();
+    }
+
+    function closeAIChat() {
+        const container = document.getElementById('ai-hint-container');
+        if (container) container.innerHTML = '';
+        aiChatOpen = false;
+        aiChatHistory = [];
+    }
+
+    async function sendAIMessage() {
+        const input = document.getElementById('ai-chat-input');
+        const messagesDiv = document.getElementById('ai-chat-messages');
+        const userMessage = input.value.trim();
+
+        if (!userMessage) return;
+
+        // Add user message to UI
+        messagesDiv.innerHTML += `
+            <div class="ai-chat-message user">
+                <div class="bubble">${escapeHtml(userMessage)}</div>
+            </div>
+        `;
+        input.value = '';
+
+        // Add loading indicator
+        messagesDiv.innerHTML += `<div class="ai-loading" id="ai-loading">생각하는 중...</div>`;
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+        // Build context
         const step = currentDay.steps[currentStep];
         const userCode = codeEditor ? codeEditor.getValue() : '';
 
-        const hintContainer = document.getElementById('ai-hint-container');
-        if (!hintContainer) return;
+        // Add to history
+        aiChatHistory.push({ role: 'user', parts: [{ text: userMessage }] });
 
-        hintContainer.innerHTML = '<div class="ai-loading">AI가 힌트를 생각하는 중...</div>';
-
-        const prompt = `당신은 친절한 p5.js 프로그래밍 튜터입니다. 초보자에게 힌트를 줄 때:
-- 정답을 직접 알려주지 마세요
-- 단계별로 생각할 수 있도록 유도하세요
-- 쉬운 한국어로 설명하세요
-- 2-3문장으로 짧게 힌트를 주세요
+        const systemContext = `당신은 친절한 p5.js 프로그래밍 튜터입니다.
+- 정답을 직접 알려주지 말고 힌트로 유도하세요
+- 쉬운 한국어로 짧게 설명하세요 (2-4문장)
 - 격려하는 말투를 사용하세요
 
-학생이 다음 문제를 풀고 있습니다:
-
-문제: ${step.question || step.instruction || step.title}
+현재 문제: ${step.question || step.instruction || step.title}
 ${step.hint ? `힌트: ${step.hint}` : ''}
 ${step.answer ? `정답: ${step.answer}` : ''}
-${step.targetCode ? `필요한 코드: ${step.targetCode}` : ''}
 
-학생의 현재 코드:
+학생의 코드:
 \`\`\`javascript
 ${userCode}
-\`\`\`
-
-학생이 막혀서 도움을 요청했습니다. 정답을 직접 알려주지 말고, 올바른 방향으로 생각할 수 있도록 힌트를 주세요.`;
+\`\`\``;
 
         try {
+            const apiKey = localStorage.getItem('gemini_api_key');
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { maxOutputTokens: 300 }
+                    contents: [
+                        { role: 'user', parts: [{ text: systemContext }] },
+                        { role: 'model', parts: [{ text: '네, 이해했습니다. 학생을 도와드릴게요!' }] },
+                        ...aiChatHistory
+                    ],
+                    generationConfig: { maxOutputTokens: 500 }
                 })
             });
 
             const data = await response.json();
             console.log('API Response:', data);
 
-            if (!response.ok || data.error) {
-                throw new Error(data.error?.message || 'API 요청 실패');
+            // Remove loading
+            document.getElementById('ai-loading')?.remove();
+
+            if (data.error) {
+                throw new Error(data.error.message);
             }
 
-            const hint = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (!hint) {
-                throw new Error('응답에서 힌트를 찾을 수 없습니다');
-            }
+            const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || '응답을 받지 못했어요.';
 
-            hintContainer.innerHTML = `<div class="ai-response"><strong>🤖 AI 힌트:</strong><br>${hint}</div>`;
+            // Add to history
+            aiChatHistory.push({ role: 'model', parts: [{ text: aiResponse }] });
+
+            // Add AI message to UI
+            messagesDiv.innerHTML += `
+                <div class="ai-chat-message ai">
+                    <div class="bubble">${aiResponse.replace(/\n/g, '<br>')}</div>
+                </div>
+            `;
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
         } catch (error) {
-            console.error('AI Hint Error:', error);
-            hintContainer.innerHTML = `<div class="ai-response" style="border-color: var(--error);">❌ 오류: ${error.message}<br><small>브라우저 콘솔(F12)에서 자세한 내용을 확인하세요.</small></div>`;
+            console.error('AI Chat Error:', error);
+            document.getElementById('ai-loading')?.remove();
+            messagesDiv.innerHTML += `
+                <div class="ai-chat-message ai">
+                    <div class="bubble" style="border: 1px solid var(--error);">❌ 오류: ${error.message}</div>
+                </div>
+            `;
         }
+    }
+
+    // Keep old function name for button compatibility
+    function getAIHint(problemType) {
+        openAIChat();
     }
 
     function checkStreak() {
