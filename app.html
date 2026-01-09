@@ -1,0 +1,3210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>p5.js 게임 만들기</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <!-- CodeMirror -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/dracula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/edit/closebrackets.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #6366f1;
+            --secondary: #f472b6;
+            --accent: #fbbf24;
+            --success: #10b981;
+            --error: #ef4444;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: var(--card);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9rem;
+        }
+
+        .stat { display: flex; align-items: center; gap: 5px; }
+        .stat-icon { font-size: 1.2rem; }
+        .stat-value { font-weight: 700; color: var(--accent); }
+
+        /* Main Layout */
+        .main {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* Home Screen */
+        .home { display: block; }
+        .home.hidden { display: none; }
+
+        .welcome {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .welcome h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .welcome p {
+            color: var(--muted);
+        }
+
+        /* Game Preview */
+        .game-preview {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .game-preview h3 {
+            margin-bottom: 15px;
+            color: var(--accent);
+        }
+
+        .game-preview-canvas {
+            border-radius: 12px;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .day-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .day-item {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .day-item:hover {
+            border-color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .day-item.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .day-item.locked:hover {
+            border-color: transparent;
+            transform: none;
+        }
+
+        .day-item.completed {
+            border-color: var(--success);
+        }
+
+        .day-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .day-info { flex: 1; }
+        .day-info h3 { margin-bottom: 5px; }
+        .day-info p { color: var(--muted); font-size: 0.9rem; }
+
+        .day-progress {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        /* Lesson Screen */
+        .lesson { display: none; }
+        .lesson.active { display: block; }
+
+        .lesson-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: var(--text);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .lesson-title { flex: 1; }
+        .lesson-title h2 { font-size: 1.3rem; margin-bottom: 3px; }
+        .lesson-title p { color: var(--muted); font-size: 0.85rem; }
+
+        /* Progress Bar */
+        .progress-container { margin-bottom: 30px; }
+
+        .progress-steps {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .progress-step {
+            flex: 1;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            transition: all 0.3s;
+        }
+
+        .progress-step.completed { background: var(--success); }
+        .progress-step.current { background: var(--primary); }
+
+        .progress-text {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        /* Content Card */
+        .content-card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .step-emoji {
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .step-title {
+            font-size: 1.4rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .step-content {
+            line-height: 1.8;
+            color: var(--muted);
+        }
+
+        .step-content p { margin-bottom: 15px; }
+        .step-content strong { color: var(--text); }
+
+        .highlight-box {
+            background: rgba(99, 102, 241, 0.15);
+            border-left: 4px solid var(--primary);
+            padding: 15px 20px;
+            border-radius: 0 12px 12px 0;
+            margin: 20px 0;
+        }
+
+        .highlight-box.success {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+        }
+
+        .highlight-box.warning {
+            background: rgba(251, 191, 36, 0.15);
+            border-color: var(--accent);
+        }
+
+        /* Code Section */
+        .code-preview-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 700px) {
+            .code-preview-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .code-section { margin: 0; }
+
+        .code-label {
+            font-size: 0.9rem;
+            color: var(--accent);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .code-readonly {
+            background: #0d1117;
+            border-radius: 12px;
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 14px;
+            color: #e6edf3;
+            line-height: 1.8;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .code-editor {
+            background: #0d1117;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .code-editor.correct { border-color: var(--success); }
+        .code-editor.wrong { border-color: var(--error); }
+
+        .code-result {
+            background: #161b22;
+            padding: 12px 15px;
+            font-family: 'Monaco', monospace;
+            font-size: 13px;
+            color: var(--muted);
+            min-height: 40px;
+        }
+
+        .code-result.success { color: var(--success); }
+        .code-result.error { color: var(--error); }
+
+        /* Canvas Preview */
+        .preview-section {
+            background: #0d1117;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .preview-label {
+            font-size: 0.9rem;
+            color: var(--success);
+            padding: 10px 15px;
+            background: #161b22;
+            font-weight: 600;
+        }
+
+        .preview-canvas-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            background: #1a1a2e;
+            min-height: 200px;
+        }
+
+        .preview-canvas-wrapper canvas {
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        /* Target Preview */
+        .target-preview {
+            background: rgba(251, 191, 36, 0.1);
+            border: 2px solid var(--accent);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .target-preview h4 {
+            color: var(--accent);
+            margin-bottom: 15px;
+        }
+
+        .target-canvas {
+            display: inline-block;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Noto Sans KR', sans-serif;
+            min-width: 120px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-check {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+        }
+
+        .btn-run {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        .btn-retry {
+            background: rgba(99, 102, 241, 0.3);
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Quiz */
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .quiz-option {
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            padding: 15px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+
+        .quiz-option:hover { border-color: var(--primary); }
+        .quiz-option.correct {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.2);
+        }
+        .quiz-option.wrong {
+            border-color: var(--error);
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Reward Modal */
+        .reward-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .reward-overlay.active { display: flex; }
+
+        .reward-card {
+            background: var(--card);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            border: 2px solid var(--accent);
+        }
+
+        .reward-emoji {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: bounce 1s ease infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .reward-title {
+            font-size: 1.8rem;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        .reward-xp {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--success);
+            margin: 20px 0;
+        }
+
+        /* Save Section */
+        .save-section {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .save-section h3 {
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        .save-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .save-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .save-btn.export { background: var(--success); color: white; }
+        .save-btn.import { background: var(--primary); color: white; }
+
+        .save-msg {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            display: none;
+        }
+
+        .save-msg.show {
+            display: block;
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        /* CodeMirror Custom */
+        .CodeMirror {
+            height: auto;
+            min-height: 100px;
+            max-height: 300px;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 14px;
+            border-radius: 12px;
+        }
+
+        .CodeMirror-scroll {
+            min-height: 100px;
+            max-height: 300px;
+        }
+
+        .cm-wrapper {
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        /* Editor hint */
+        .editor-hint {
+            color: var(--muted);
+            font-size: 0.85rem;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+        }
+
+        /* Confetti */
+        .confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* Settings */
+        .settings-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 5px;
+            margin-left: 10px;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .settings-btn:hover { opacity: 1; }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: var(--card);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 450px;
+            width: 90%;
+        }
+        .modal-content h3 {
+            margin-bottom: 20px;
+        }
+        .setting-item {
+            margin-bottom: 20px;
+        }
+        .setting-item label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .api-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+        .api-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .modal-btns {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 0.8rem;
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* AI Chat - Black Theme */
+        .ai-hint-btn {
+            background: #000;
+            color: white;
+            border: 1px solid #333;
+            padding: 10px 20px;
+            border-radius: 24px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .ai-hint-btn:hover {
+            background: #1a1a1a;
+            border-color: #444;
+        }
+        .ai-chat-container {
+            background: #000;
+            border-radius: 12px;
+            margin-top: 20px;
+            overflow: hidden;
+            border: 1px solid #222;
+        }
+        .ai-chat-header {
+            background: #0a0a0a;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #222;
+        }
+        .ai-chat-header-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            color: #fff;
+        }
+        .ai-chat-header-title .gemini-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #4285f4, #9b72cb, #d96570);
+            border-radius: 50%;
+        }
+        .ai-chat-close {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 1.3rem;
+            padding: 4px 8px;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        .ai-chat-close:hover {
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .ai-chat-messages {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #000;
+        }
+        .ai-chat-message {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+        }
+        .ai-chat-message.user {
+            flex-direction: row-reverse;
+        }
+        .ai-chat-message .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .ai-chat-message.user .avatar {
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        .ai-chat-message.ai .avatar {
+            background: linear-gradient(135deg, #4285f4, #9b72cb, #d96570);
+        }
+        .ai-chat-message .bubble {
+            padding: 14px 18px;
+            border-radius: 16px;
+            max-width: 85%;
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+        .ai-chat-message.user .bubble {
+            background: #1a1a1a;
+            color: #fff;
+            border-radius: 16px 16px 4px 16px;
+        }
+        .ai-chat-message.ai .bubble {
+            background: #111;
+            color: #e0e0e0;
+            border-radius: 16px 16px 16px 4px;
+            border: 1px solid #222;
+        }
+        .ai-chat-input-area {
+            padding: 16px 18px;
+            background: #0a0a0a;
+            border-top: 1px solid #222;
+        }
+        .ai-chat-input-wrapper {
+            display: flex;
+            align-items: center;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 24px;
+            padding: 4px 4px 4px 18px;
+        }
+        .ai-chat-input {
+            flex: 1;
+            padding: 12px 0;
+            border: none;
+            background: transparent;
+            color: #fff;
+            font-size: 0.95rem;
+        }
+        .ai-chat-input:focus {
+            outline: none;
+        }
+        .ai-chat-input::placeholder {
+            color: #666;
+        }
+        .ai-chat-send {
+            background: #fff;
+            border: none;
+            color: #000;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+        .ai-chat-send:hover {
+            background: #e0e0e0;
+        }
+        .ai-chat-send:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+        .ai-loading {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #666;
+            padding: 10px 0;
+        }
+        .ai-loading::before {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid #fff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">🎮 게임 만들기</div>
+        <div class="stats">
+            <div class="stat">
+                <span class="stat-icon">⚡</span>
+                <span class="stat-value" id="xp-display">0</span>
+                <span>XP</span>
+            </div>
+            <div class="stat">
+                <span class="stat-icon">🔥</span>
+                <span class="stat-value" id="streak-display">0</span>
+                <span>일</span>
+            </div>
+            <button class="settings-btn" onclick="openSettings()" title="설정">⚙️</button>
+        </div>
+    </header>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal" style="display:none;">
+        <div class="modal-content">
+            <h3>⚙️ 설정</h3>
+            <div class="setting-item">
+                <label>Gemini API 키 (무료)</label>
+                <p style="font-size:0.8rem;color:var(--muted);margin:5px 0;">AI 힌트 기능을 사용하려면 API 키가 필요해요.<br>키는 브라우저에만 저장되고 외부에 공개되지 않아요.<br><a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--primary);">👉 무료 API 키 받기</a></p>
+                <input type="password" id="api-key-input" placeholder="AIzaSy..." class="api-input">
+                <button class="btn btn-small" onclick="toggleApiKeyVisibility()">👁️ 보기</button>
+            </div>
+            <div class="modal-btns">
+                <button class="btn btn-secondary" onclick="closeSettings()">취소</button>
+                <button class="btn btn-primary" onclick="saveSettings()">저장</button>
+            </div>
+        </div>
+    </div>
+
+
+    <main class="main">
+        <!-- Home Screen -->
+        <div class="home" id="home-screen">
+            <div class="welcome">
+                <h1>🎮 나만의 게임 만들기</h1>
+                <p>7일 동안 실제 게임을 직접 만들어봐요!</p>
+            </div>
+
+            <div class="game-preview">
+                <h3>🎯 우리가 만들 게임</h3>
+                <div class="game-preview-canvas" id="final-game-preview"></div>
+                <p style="color: var(--muted); margin-top: 15px; font-size: 0.9rem;">
+                    횡스크롤 플랫폼 게임 - 캐릭터가 뛰고, 아이템을 모으고, 협곡을 피해요!
+                </p>
+            </div>
+
+            <div class="day-list" id="day-list"></div>
+
+            <div class="save-section">
+                <h3>💾 진행상황 저장</h3>
+                <div class="save-btns">
+                    <button class="save-btn export" onclick="exportProgress()">📤 백업</button>
+                    <button class="save-btn import" onclick="document.getElementById('import-file').click()">📥 복원</button>
+                    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importProgress(event)">
+                </div>
+                <div class="save-msg" id="save-msg"></div>
+            </div>
+        </div>
+
+        <!-- Lesson Screen -->
+        <div class="lesson" id="lesson-screen">
+            <div class="lesson-header">
+                <button class="back-btn" onclick="goHome()">←</button>
+                <div class="lesson-title">
+                    <h2 id="lesson-title-text">Day 1</h2>
+                    <p id="lesson-subtitle-text">캔버스 만들기</p>
+                </div>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-steps" id="progress-steps"></div>
+                <div class="progress-text" id="progress-text">1 / 5</div>
+            </div>
+
+            <div class="content-card" id="step-content"></div>
+
+            <div class="btn-group" id="btn-group">
+                <button class="btn btn-primary" id="next-btn" onclick="nextStep()">다음 →</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Reward Modal -->
+    <div class="reward-overlay" id="reward-overlay">
+        <div class="reward-card">
+            <div class="reward-emoji" id="reward-emoji">🎉</div>
+            <h2 class="reward-title">대단해요!</h2>
+            <p id="reward-text">Day를 완료했어요!</p>
+            <div class="reward-xp" id="reward-xp">+50 XP</div>
+            <button class="btn btn-primary" onclick="closeReward()" style="width:100%; margin-top:20px;">계속하기</button>
+        </div>
+    </div>
+
+    <canvas class="confetti-canvas" id="confetti"></canvas>
+
+    <script>
+    // ==========================================
+    // SOUND EFFECTS
+    // ==========================================
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        if (type === 'correct') {
+            // Happy sound - ascending notes
+            oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+            oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+            oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2); // G5
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialDecayTo = 0.01;
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.4);
+        } else if (type === 'wrong') {
+            // Sad sound - low buzz
+            oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+            oscillator.type = 'sawtooth';
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        } else if (type === 'click') {
+            // Click sound
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.05);
+        } else if (type === 'success') {
+            // Fanfare
+            oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.15);
+            oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.3);
+            oscillator.frequency.setValueAtTime(1046.50, audioContext.currentTime + 0.45);
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.6);
+        }
+    }
+
+    // ==========================================
+    // LESSON DATA - Project Based
+    // ==========================================
+    const LESSONS = [
+        {
+            day: 1,
+            title: "캔버스 & 배경",
+            subtitle: "게임 화면 만들기",
+            icon: "🖼️",
+            xp: 50,
+            steps: [
+                {
+                    type: "intro",
+                    emoji: "🎯",
+                    title: "오늘의 목표",
+                    content: `
+                        <p>오늘 우리가 만들 것:</p>
+                        <div class="target-preview">
+                            <h4>🖼️ 게임 배경</h4>
+                            <div class="target-canvas" id="day1-target"></div>
+                        </div>
+                        <p><strong>파란 하늘</strong>과 <strong>초록 땅</strong>을 그려볼 거예요!</p>
+                    `,
+                    targetDraw: (p) => {
+                        p.background(100, 155, 255);
+                        p.noStroke();
+                        p.fill(0, 155, 0);
+                        p.rect(0, p.height * 3/4, p.width, p.height/4);
+                    }
+                },
+                {
+                    type: "explain",
+                    emoji: "📐",
+                    title: "createCanvas() - 캔버스 만들기",
+                    content: `
+                        <p><strong>createCanvas(가로, 세로)</strong>로 그림 그릴 공간을 만들어요.</p>
+                        <div class="highlight-box">
+                            <strong>💡 좌표 시스템</strong><br>
+                            • (0, 0)은 <strong>왼쪽 위</strong> 모서리<br>
+                            • X가 커지면 → 오른쪽으로<br>
+                            • Y가 커지면 → 아래로
+                        </div>
+                    `,
+                    code: `function setup() {
+    createCanvas(400, 300);
+    // 가로 400픽셀, 세로 300픽셀
+}`
+                },
+                {
+                    type: "practice",
+                    emoji: "✏️",
+                    title: "연습 1: 캔버스 만들기",
+                    content: `<p>가로 <strong>500</strong>, 세로 <strong>400</strong> 크기의 캔버스를 만들어보세요.</p>`,
+                    starterCode: `function setup() {
+    // 여기에 createCanvas 쓰기
+
+}`,
+                    answer: "createCanvas(500, 400)",
+                    answerCheck: (code) => {
+                        return code.includes('createCanvas') &&
+                               code.includes('500') &&
+                               code.includes('400');
+                    },
+                    hint: "createCanvas(가로, 세로) 형태로 써요"
+                },
+                {
+                    type: "explain",
+                    emoji: "🎨",
+                    title: "background() - 배경색 칠하기",
+                    content: `
+                        <p><strong>background(빨강, 초록, 파랑)</strong>으로 전체 배경을 칠해요.</p>
+                        <p>각 색상 값은 <strong>0~255</strong> 사이예요.</p>
+                    `,
+                    code: `function draw() {
+    background(100, 155, 255);
+    // 빨강 100, 초록 155, 파랑 255
+    // = 하늘색!
+}`
+                },
+                {
+                    type: "interactive",
+                    emoji: "🖌️",
+                    title: "색상 실험하기",
+                    content: `<p>숫자를 바꿔서 다른 색을 만들어보세요!</p>`,
+                    defaultCode: `// 숫자를 바꿔보세요 (0-255)
+background(100, 155, 255);
+
+// 빨간색: background(255, 0, 0);
+// 초록색: background(0, 255, 0);
+// 파란색: background(0, 0, 255);`,
+                    canvasSize: { w: 200, h: 150 }
+                },
+                {
+                    type: "explain",
+                    emoji: "📦",
+                    title: "rect() - 사각형 그리기",
+                    content: `
+                        <p><strong>rect(x, y, 가로, 세로)</strong>로 사각형을 그려요.</p>
+                        <p><strong>fill(빨강, 초록, 파랑)</strong>으로 색을 정해요.</p>
+                    `,
+                    code: `// 색 정하기
+fill(0, 155, 0);  // 초록색
+
+// 사각형 그리기
+rect(0, 225, 400, 75);
+// x=0, y=225 위치에
+// 가로 400, 세로 75 사각형`
+                },
+                {
+                    type: "practice",
+                    emoji: "✏️",
+                    title: "연습 2: 초록 땅 그리기",
+                    content: `<p>x=0, y=200 위치에 가로 300, 세로 100인 <strong>초록색 사각형</strong>을 그려보세요.</p>`,
+                    starterCode: `function draw() {
+    background(100, 155, 255);
+
+    // 초록색으로 설정
+    fill(0, 155, 0);
+
+    // 여기에 rect 쓰기
+
+}`,
+                    answer: "rect(0, 200, 300, 100)",
+                    answerCheck: (code) => {
+                        return code.includes('rect') &&
+                               code.includes('0') &&
+                               code.includes('200') &&
+                               code.includes('300') &&
+                               code.includes('100');
+                    },
+                    hint: "rect(x, y, 가로, 세로) 형태로 써요"
+                },
+                {
+                    type: "build",
+                    emoji: "🔨",
+                    title: "직접 만들기: 게임 배경",
+                    content: `<p>하늘과 땅이 있는 게임 배경을 완성해보세요!</p>`,
+                    starterCode: `function setup() {
+    createCanvas(400, 300);
+}
+
+function draw() {
+    // 1. 하늘색 배경
+    background(100, 155, 255);
+
+    // 2. 테두리 없애기
+    noStroke();
+
+    // 3. 초록색 설정
+    fill(0, 155, 0);
+
+    // 4. 땅 그리기 (아래쪽 1/4)
+    // rect(x, y, 가로, 세로)
+
+}`,
+                    targetCode: `rect(0, 225, 400, 75)`,
+                    answerCheck: (code) => {
+                        return code.includes('rect') &&
+                               code.includes('225') || code.includes('height');
+                    },
+                    hint: "캔버스 높이가 300이니까, 3/4 위치인 225부터 땅을 그려요",
+                    canvasSize: { w: 400, h: 300 }
+                },
+                {
+                    type: "quiz",
+                    emoji: "🧠",
+                    title: "확인 퀴즈",
+                    question: "p5.js에서 (0, 0) 좌표는 어디일까요?",
+                    options: [
+                        "화면 중앙",
+                        "왼쪽 위 모서리",
+                        "왼쪽 아래 모서리",
+                        "오른쪽 위 모서리"
+                    ],
+                    correct: 1,
+                    explanation: "p5.js에서 (0,0)은 왼쪽 위 모서리예요. X가 커지면 오른쪽, Y가 커지면 아래로 이동해요."
+                }
+            ]
+        },
+        {
+            day: 2,
+            title: "캐릭터 그리기",
+            subtitle: "게임 주인공 만들기",
+            icon: "🧑",
+            xp: 60,
+            steps: [
+                {
+                    type: "intro",
+                    emoji: "🎯",
+                    title: "오늘의 목표",
+                    content: `
+                        <p>오늘 우리가 만들 것:</p>
+                        <div class="target-preview">
+                            <h4>🧑 게임 캐릭터</h4>
+                            <div class="target-canvas" id="day2-target"></div>
+                        </div>
+                        <p>머리, 몸통, 팔, 다리가 있는 캐릭터를 그려볼 거예요!</p>
+                    `,
+                    targetDraw: (p) => {
+                        p.background(100, 155, 255);
+                        p.noStroke();
+                        p.fill(0, 155, 0);
+                        p.rect(0, p.height * 3/4, p.width, p.height/4);
+
+                        let x = p.width/2;
+                        let y = p.height * 3/4;
+                        // Head
+                        p.fill(200, 150, 150);
+                        p.ellipse(x, y - 47, 25);
+                        // Body
+                        p.fill(255, 0, 0);
+                        p.rect(x - 13, y - 35, 26, 30);
+                        // Arms
+                        p.fill(0);
+                        p.rect(x - 18, y - 35, 6, 20);
+                        p.rect(x + 12, y - 35, 6, 20);
+                        // Feet
+                        p.rect(x - 15, y - 6, 10, 10);
+                        p.rect(x + 5, y - 6, 10, 10);
+                    }
+                },
+                {
+                    type: "explain",
+                    emoji: "📦",
+                    title: "변수로 위치 저장하기",
+                    content: `
+                        <p>캐릭터 위치를 <strong>변수</strong>에 저장하면 나중에 쉽게 움직일 수 있어요!</p>
+                    `,
+                    code: `var gameChar_x;  // X 위치
+var gameChar_y;  // Y 위치
+
+function setup() {
+    createCanvas(400, 300);
+    gameChar_x = 200;  // 중앙
+    gameChar_y = 225;  // 땅 위치
+}`
+                },
+                {
+                    type: "explain",
+                    emoji: "⭕",
+                    title: "ellipse() - 원 그리기",
+                    content: `
+                        <p><strong>ellipse(x, y, 가로, 세로)</strong>로 원이나 타원을 그려요.</p>
+                        <p>가로=세로면 <strong>원</strong>이 돼요!</p>
+                    `,
+                    code: `// 머리 (원)
+fill(200, 150, 150);  // 살색
+ellipse(gameChar_x, gameChar_y - 47, 25);
+// 캐릭터 위치에서 47픽셀 위에
+// 지름 25인 원`
+                },
+                {
+                    type: "practice",
+                    emoji: "✏️",
+                    title: "연습 1: 머리 그리기",
+                    content: `<p>x=100, y=100 위치에 지름 30인 원을 그려보세요.</p>`,
+                    starterCode: `function setup() {
+    createCanvas(200, 200);
+}
+
+function draw() {
+    background(100, 155, 255);
+    fill(200, 150, 150);
+
+    // 원 그리기
+
+}`,
+                    answer: "ellipse(100, 100, 30)",
+                    answerCheck: (code) => {
+                        return code.includes('ellipse') &&
+                               code.includes('100') &&
+                               code.includes('30');
+                    },
+                    hint: "ellipse(x, y, 지름) - 가로세로 같으면 원!"
+                },
+                {
+                    type: "explain",
+                    emoji: "📦",
+                    title: "캐릭터 조립하기",
+                    content: `
+                        <p>캐릭터는 여러 도형을 <strong>조립</strong>해서 만들어요:</p>
+                        <div class="highlight-box">
+                            1. <strong>머리</strong> - ellipse (원)<br>
+                            2. <strong>몸통</strong> - rect (사각형)<br>
+                            3. <strong>팔</strong> - rect 2개<br>
+                            4. <strong>다리</strong> - rect 2개
+                        </div>
+                    `,
+                    code: `// 몸통 (빨간색)
+fill(255, 0, 0);
+rect(gameChar_x - 13, gameChar_y - 35, 26, 30);
+
+// 팔 (검정색)
+fill(0);
+rect(gameChar_x - 18, gameChar_y - 35, 6, 20);
+rect(gameChar_x + 12, gameChar_y - 35, 6, 20);
+
+// 다리
+rect(gameChar_x - 15, gameChar_y - 6, 10, 10);
+rect(gameChar_x + 5, gameChar_y - 6, 10, 10);`
+                },
+                {
+                    type: "interactive",
+                    emoji: "🖌️",
+                    title: "캐릭터 색상 바꾸기",
+                    content: `<p>fill() 값을 바꿔서 캐릭터 색상을 바꿔보세요!</p>`,
+                    defaultCode: `var x = 100;
+var y = 140;
+
+background(100, 155, 255);
+noStroke();
+
+// 땅
+fill(0, 155, 0);
+rect(0, 150, 200, 50);
+
+// 머리 - 색 바꿔보기!
+fill(200, 150, 150);
+ellipse(x, y - 47, 25);
+
+// 몸통 - 색 바꿔보기!
+fill(255, 0, 0);
+rect(x - 13, y - 35, 26, 30);
+
+// 팔
+fill(0);
+rect(x - 18, y - 35, 6, 20);
+rect(x + 12, y - 35, 6, 20);
+
+// 다리
+rect(x - 15, y - 6, 10, 10);
+rect(x + 5, y - 6, 10, 10);`,
+                    canvasSize: { w: 200, h: 200 }
+                },
+                {
+                    type: "build",
+                    emoji: "🔨",
+                    title: "직접 만들기: 캐릭터",
+                    content: `<p>빠진 부분을 채워서 캐릭터를 완성하세요!</p>`,
+                    starterCode: `var gameChar_x = 100;
+var gameChar_y = 150;
+
+function setup() {
+    createCanvas(200, 200);
+}
+
+function draw() {
+    background(100, 155, 255);
+    noStroke();
+
+    // 땅
+    fill(0, 155, 0);
+    rect(0, 150, 200, 50);
+
+    // 머리 (살색 원)
+    fill(200, 150, 150);
+    ellipse(gameChar_x, gameChar_y - 47, 25);
+
+    // 몸통 (빨간 사각형)
+    fill(255, 0, 0);
+    // 여기에 rect 추가!
+
+
+    // 팔 (검정)
+    fill(0);
+    rect(gameChar_x - 18, gameChar_y - 35, 6, 20);
+    rect(gameChar_x + 12, gameChar_y - 35, 6, 20);
+
+    // 다리 (검정)
+    rect(gameChar_x - 15, gameChar_y - 6, 10, 10);
+    rect(gameChar_x + 5, gameChar_y - 6, 10, 10);
+}`,
+                    targetCode: `rect(gameChar_x - 13, gameChar_y - 35, 26, 30)`,
+                    answerCheck: (code) => {
+                        return code.includes('rect') &&
+                               code.includes('gameChar_x') &&
+                               code.includes('26') &&
+                               code.includes('30');
+                    },
+                    hint: "몸통은 캐릭터 중심에서 왼쪽으로 13, 위로 35 이동한 위치에 그려요",
+                    canvasSize: { w: 200, h: 200 }
+                },
+                {
+                    type: "quiz",
+                    emoji: "🧠",
+                    title: "확인 퀴즈",
+                    question: "ellipse(100, 50, 30, 30)은 무엇을 그릴까요?",
+                    options: [
+                        "가로 100, 세로 50인 타원",
+                        "x=100, y=50에 지름 30인 원",
+                        "30개의 원",
+                        "x=30, y=30에 원"
+                    ],
+                    correct: 1,
+                    explanation: "ellipse(x, y, 가로, 세로)에서 가로=세로면 원이에요. 위치는 (100, 50)이고 지름은 30이에요."
+                }
+            ]
+        },
+        {
+            day: 3,
+            title: "키보드 입력",
+            subtitle: "캐릭터 움직이기",
+            icon: "⌨️",
+            xp: 70,
+            steps: [
+                {
+                    type: "intro",
+                    emoji: "🎯",
+                    title: "오늘의 목표",
+                    content: `
+                        <p>오늘 우리가 만들 것:</p>
+                        <div class="highlight-box success">
+                            ⌨️ 키보드로 캐릭터 움직이기!<br><br>
+                            ← 왼쪽 화살표: 왼쪽으로 이동<br>
+                            → 오른쪽 화살표: 오른쪽으로 이동
+                        </div>
+                        <p>키보드 입력을 받아서 캐릭터를 움직여볼 거예요!</p>
+                    `
+                },
+                {
+                    type: "explain",
+                    emoji: "✅",
+                    title: "Boolean - 참/거짓",
+                    content: `
+                        <p><strong>Boolean</strong>은 딱 두 가지만 가능해요:</p>
+                        <p style="font-size: 1.3rem; text-align: center; margin: 15px 0;">
+                            <span style="color: #10b981;">true (참)</span> 또는
+                            <span style="color: #ef4444;">false (거짓)</span>
+                        </p>
+                        <p>전등 스위치처럼 켜짐/꺼짐만 있어요!</p>
+                    `,
+                    code: `var isLeft = false;   // 왼쪽 이동중?
+var isRight = false;  // 오른쪽 이동중?
+
+// 키 누르면 true
+// 키 떼면 false`
+                },
+                {
+                    type: "explain",
+                    emoji: "⌨️",
+                    title: "keyPressed() - 키 누를 때",
+                    content: `
+                        <p><strong>keyPressed()</strong> 함수는 키보드를 누를 때 자동으로 실행돼요!</p>
+                        <p><strong>keyCode</strong>로 어떤 키인지 확인해요.</p>
+                    `,
+                    code: `function keyPressed() {
+    if (keyCode == 37) {  // 왼쪽 화살표
+        isLeft = true;
+    }
+    if (keyCode == 39) {  // 오른쪽 화살표
+        isRight = true;
+    }
+}
+
+// 키 코드:
+// 37 = 왼쪽, 39 = 오른쪽
+// 38 = 위, 40 = 아래
+// 32 = 스페이스바`
+                },
+                {
+                    type: "practice",
+                    emoji: "✏️",
+                    title: "연습: 조건문 작성하기",
+                    content: `<p>keyCode가 39(오른쪽 화살표)일 때 isRight를 true로 바꾸는 조건문을 써보세요.</p>`,
+                    starterCode: `function keyPressed() {
+    // keyCode가 39이면 isRight = true
+
+}`,
+                    answer: "if (keyCode == 39)",
+                    answerCheck: (code) => {
+                        return code.includes('if') &&
+                               code.includes('keyCode') &&
+                               code.includes('39');
+                    },
+                    hint: "if (keyCode == 39) { isRight = true; }"
+                },
+                {
+                    type: "explain",
+                    emoji: "🔓",
+                    title: "keyReleased() - 키 뗄 때",
+                    content: `
+                        <p><strong>keyReleased()</strong>는 키를 뗄 때 실행돼요.</p>
+                        <p>키를 떼면 이동을 멈춰야 하니까 false로 바꿔요!</p>
+                    `,
+                    code: `function keyReleased() {
+    if (keyCode == 37) {  // 왼쪽 화살표
+        isLeft = false;   // 멈춤!
+    }
+    if (keyCode == 39) {  // 오른쪽 화살표
+        isRight = false;  // 멈춤!
+    }
+}`
+                },
+                {
+                    type: "explain",
+                    emoji: "🏃",
+                    title: "실제로 움직이기",
+                    content: `
+                        <p>draw() 함수에서 isLeft/isRight를 확인하고 위치를 바꿔요!</p>
+                    `,
+                    code: `function draw() {
+    // ... 배경 그리기 ...
+
+    // 이동 처리
+    if (isLeft) {
+        gameChar_x = gameChar_x - 5;
+        // 또는 gameChar_x -= 5;
+    }
+    if (isRight) {
+        gameChar_x = gameChar_x + 5;
+    }
+
+    // ... 캐릭터 그리기 ...
+}`
+                },
+                {
+                    type: "build",
+                    emoji: "🔨",
+                    title: "직접 만들기: 움직이는 캐릭터",
+                    content: `<p>draw() 안에 이동 코드를 추가해서 캐릭터가 움직이게 해보세요!</p>`,
+                    starterCode: `var gameChar_x = 100;
+var gameChar_y = 150;
+var isLeft = false;
+var isRight = false;
+
+function setup() {
+    createCanvas(200, 200);
+}
+
+function draw() {
+    background(100, 155, 255);
+    noStroke();
+    fill(0, 155, 0);
+    rect(0, 150, 200, 50);
+
+    // 여기에 이동 코드 추가!
+    // if (isLeft) { ... }
+    // if (isRight) { ... }
+
+
+    // 캐릭터 그리기
+    fill(200, 150, 150);
+    ellipse(gameChar_x, gameChar_y - 47, 25);
+    fill(255, 0, 0);
+    rect(gameChar_x - 13, gameChar_y - 35, 26, 30);
+    fill(0);
+    rect(gameChar_x - 18, gameChar_y - 35, 6, 20);
+    rect(gameChar_x + 12, gameChar_y - 35, 6, 20);
+    rect(gameChar_x - 15, gameChar_y - 6, 10, 10);
+    rect(gameChar_x + 5, gameChar_y - 6, 10, 10);
+}
+
+function keyPressed() {
+    if (keyCode == 37) isLeft = true;
+    if (keyCode == 39) isRight = true;
+}
+
+function keyReleased() {
+    if (keyCode == 37) isLeft = false;
+    if (keyCode == 39) isRight = false;
+}`,
+                    targetCode: `if (isLeft) { gameChar_x -= 5; }`,
+                    answerCheck: (code) => {
+                        return code.includes('if') &&
+                               code.includes('isLeft') &&
+                               code.includes('gameChar_x');
+                    },
+                    hint: "if (isLeft) { gameChar_x -= 5; } if (isRight) { gameChar_x += 5; }",
+                    canvasSize: { w: 200, h: 200 }
+                },
+                {
+                    type: "quiz",
+                    emoji: "🧠",
+                    title: "확인 퀴즈",
+                    question: "keyCode == 37은 어떤 키일까요?",
+                    options: [
+                        "스페이스바",
+                        "Enter",
+                        "왼쪽 화살표",
+                        "오른쪽 화살표"
+                    ],
+                    correct: 2,
+                    explanation: "37은 왼쪽 화살표예요. 39는 오른쪽, 38은 위, 40은 아래, 32는 스페이스바예요."
+                }
+            ]
+        },
+        {
+            day: 4,
+            title: "점프 & 중력",
+            subtitle: "캐릭터 점프시키기",
+            icon: "🦘",
+            xp: 80,
+            steps: [
+                {
+                    type: "intro",
+                    emoji: "🎯",
+                    title: "오늘의 목표",
+                    content: `
+                        <p>오늘 우리가 만들 것:</p>
+                        <div class="highlight-box success">
+                            🦘 스페이스바로 점프하기!<br><br>
+                            • 스페이스바 누르면 점프<br>
+                            • 중력으로 자연스럽게 떨어지기<br>
+                            • 공중에서는 점프 불가
+                        </div>
+                    `
+                },
+                {
+                    type: "explain",
+                    emoji: "🦘",
+                    title: "점프 구현하기",
+                    content: `
+                        <p>점프는 캐릭터의 <strong>Y 위치</strong>를 위로 이동시켜요.</p>
+                        <p>Y가 작아지면 위로 올라가요! (좌표계 기억하세요)</p>
+                    `,
+                    code: `var floorPos_y = 225;  // 땅 위치
+var isFalling = false;  // 떨어지는 중?
+
+function keyPressed() {
+    // 스페이스바(32) & 땅에 있을 때만 점프
+    if (keyCode == 32 && gameChar_y == floorPos_y) {
+        gameChar_y -= 100;  // 위로 100 이동
+        isFalling = true;
+    }
+}`
+                },
+                {
+                    type: "explain",
+                    emoji: "🌍",
+                    title: "중력 구현하기",
+                    content: `
+                        <p><strong>중력</strong>은 계속해서 캐릭터를 아래로 끌어당겨요.</p>
+                        <p>draw()에서 매 프레임마다 Y를 증가시켜요.</p>
+                    `,
+                    code: `var gravity = 2;  // 중력 세기
+
+function draw() {
+    // ... 그리기 코드 ...
+
+    // 중력 적용
+    if (gameChar_y < floorPos_y) {
+        // 땅보다 위에 있으면
+        gameChar_y += gravity;  // 아래로
+        isFalling = true;
+    } else {
+        // 땅에 닿으면
+        gameChar_y = floorPos_y;  // 땅에 고정
+        isFalling = false;
+    }
+}`
+                },
+                {
+                    type: "practice",
+                    emoji: "✏️",
+                    title: "연습: 중력 조건문",
+                    content: `<p>캐릭터가 땅(floorPos_y)보다 위에 있는지 확인하는 조건문을 써보세요.</p>`,
+                    starterCode: `// gameChar_y가 floorPos_y보다 작으면
+// (위에 있으면) 중력 적용
+
+`,
+                    answer: "if (gameChar_y < floorPos_y)",
+                    answerCheck: (code) => {
+                        return code.includes('if') &&
+                               code.includes('gameChar_y') &&
+                               code.includes('<') &&
+                               code.includes('floorPos_y');
+                    },
+                    hint: "< 는 '보다 작다'는 뜻이에요. Y가 작으면 위에 있는 거예요!"
+                },
+                {
+                    type: "interactive",
+                    emoji: "🖌️",
+                    title: "중력 실험하기",
+                    content: `<p>gravity 값을 바꿔보세요! 클수록 빨리 떨어져요.</p>`,
+                    defaultCode: `var y = 50;
+var gravity = 2;  // 이 값 바꿔보기!
+var floorY = 180;
+
+background(100, 155, 255);
+noStroke();
+fill(0, 155, 0);
+rect(0, 180, 200, 20);
+
+// 중력 시뮬레이션
+for (var i = 0; i < 10; i++) {
+    fill(255, 100, 100, 150);
+    ellipse(100, y, 20, 20);
+
+    if (y < floorY) {
+        y += gravity * (i + 1);
+    }
+}`,
+                    canvasSize: { w: 200, h: 200 }
+                },
+                {
+                    type: "build",
+                    emoji: "🔨",
+                    title: "직접 만들기: 점프하는 캐릭터",
+                    content: `<p>점프와 중력 코드를 추가해서 캐릭터가 점프하게 해보세요!</p>
+                    <p class="editor-hint">💡 캔버스 클릭 후 스페이스바를 눌러보세요!</p>`,
+                    starterCode: `var gameChar_x = 100;
+var gameChar_y;
+var floorPos_y = 150;
+var gravity = 2;
+var isFalling = false;
+
+function setup() {
+    createCanvas(200, 200);
+    gameChar_y = floorPos_y;
+}
+
+function draw() {
+    background(100, 155, 255);
+    noStroke();
+    fill(0, 155, 0);
+    rect(0, 150, 200, 50);
+
+    // 중력 적용 - 여기 채우기!
+    // if (gameChar_y < floorPos_y) { ... }
+
+
+    // 캐릭터
+    fill(200, 150, 150);
+    ellipse(gameChar_x, gameChar_y - 47, 25);
+    fill(255, 0, 0);
+    rect(gameChar_x - 13, gameChar_y - 35, 26, 30);
+    fill(0);
+    rect(gameChar_x - 18, gameChar_y - 35, 6, 20);
+    rect(gameChar_x + 12, gameChar_y - 35, 6, 20);
+    rect(gameChar_x - 15, gameChar_y - 6, 10, 10);
+    rect(gameChar_x + 5, gameChar_y - 6, 10, 10);
+}
+
+function keyPressed() {
+    if (keyCode == 32 && gameChar_y == floorPos_y) {
+        gameChar_y -= 80;
+        isFalling = true;
+    }
+}`,
+                    targetCode: `if (gameChar_y < floorPos_y) { gameChar_y += gravity; }`,
+                    answerCheck: (code) => {
+                        return code.includes('gameChar_y') &&
+                               code.includes('gravity') &&
+                               code.includes('floorPos_y');
+                    },
+                    hint: "땅보다 위에 있으면(gameChar_y < floorPos_y) 중력을 더해요(gameChar_y += gravity)",
+                    canvasSize: { w: 200, h: 200 }
+                },
+                {
+                    type: "quiz",
+                    emoji: "🧠",
+                    title: "확인 퀴즈",
+                    question: "gameChar_y += 2는 캐릭터를 어디로 이동시킬까요?",
+                    options: [
+                        "위로 (Y가 작아져야 위)",
+                        "아래로 (Y가 커지면 아래)",
+                        "오른쪽으로",
+                        "왼쪽으로"
+                    ],
+                    correct: 1,
+                    explanation: "p5.js에서 Y가 커지면 아래로 이동해요. += 2는 Y를 2 증가시키니까 아래로 이동!"
+                }
+            ]
+        },
+        {
+            day: 5,
+            title: "배경 꾸미기",
+            subtitle: "나무, 구름, 산 그리기",
+            icon: "🌲",
+            xp: 80,
+            steps: [
+                {
+                    type: "intro",
+                    emoji: "🎯",
+                    title: "오늘의 목표",
+                    content: `
+                        <p>오늘 우리가 만들 것:</p>
+                        <div class="target-preview">
+                            <h4>🌲 배경 요소들</h4>
+                            <div class="target-canvas" id="day5-target"></div>
+                        </div>
+                        <p>산, 구름, 나무를 그려서 게임 배경을 꾸며볼 거예요!</p>
+                    `,
+                    targetDraw: (p) => {
+                        p.background(100, 155, 255);
+                        p.noStroke();
+                        // Mountain
+                        p.fill(0, 100, 0);
+                        p.triangle(20, 150, 80, 50, 140, 150);
+                        // Cloud
+                        p.fill(255);
+                        p.ellipse(160, 40, 40, 25);
+                        p.ellipse(180, 40, 50, 30);
+                        p.ellipse(200, 40, 40, 25);
+                        // Ground
+                        p.fill(0, 155, 0);
+                        p.rect(0, 150, 250, 50);
+                        // Tree
+                        p.fill(130, 100, 0);
+                        p.rect(180, 100, 20, 50);
+                        p.fill(0, 150, 0);
+                        p.triangle(160, 120, 190, 70, 220, 120);
+                        p.triangle(160, 100, 190, 50, 220, 100);
+                    }
+                },
+                {
+                    type: "explain",
+                    emoji: "📚",
+                    title: "배열로 여러 개 저장하기",
+                    content: `
+                        <p><strong>배열</strong>은 여러 값을 한 번에 저장해요.</p>
+                        <div class="highlight-box">
+                            나무 10개 위치를 저장하려면?<br>
+                            ❌ var tree1=100; var tree2=200; ...<br>
+                            ✅ var trees = [100, 200, 300, ...];
+                        </div>
+                    `,
+                    code: `// 나무 X 위치들
+var trees_x = [100, 300, 500, 700];
+
+// 값 가져오기 (0부터 시작!)
+trees_x[0]  // 100 (첫번째)
+trees_x[1]  // 300 (두번째)
+trees_x[3]  // 700 (네번째)`
+                },
+                {
+                    type: "explain",
+                    emoji: "🔄",
+                    title: "for문으로 반복하기",
+                    content: `
+                        <p><strong>for문</strong>으로 배열의 모든 값을 처리해요.</p>
+                    `,
+                    code: `var trees_x = [100, 250, 400];
+
+// 모든 나무 그리기
+for (var i = 0; i < trees_x.length; i++) {
+    // trees_x[i] = 현재 나무 X 위치
+
+    // 나무 줄기
+    fill(130, 100, 0);
+    rect(trees_x[i], 200, 20, 50);
+
+    // 나무 잎
+    fill(0, 150, 0);
+    triangle(
+        trees_x[i] - 20, 220,
+        trees_x[i] + 10, 170,
+        trees_x[i] + 40, 220
+    );
+}`
+                },
+                {
+                    type: "practice",
+                    emoji: "✏️",
+                    title: "연습: for문 작성하기",
+                    content: `<p>배열 길이만큼 반복하는 for문을 완성하세요.</p>`,
+                    starterCode: `var clouds = [50, 150, 250];
+
+// clouds 배열 길이만큼 반복
+
+`,
+                    answer: "for (var i = 0; i < clouds.length; i++)",
+                    answerCheck: (code) => {
+                        return code.includes('for') &&
+                               code.includes('clouds.length') &&
+                               code.includes('i++');
+                    },
+                    hint: "for (var i = 0; i < 배열.length; i++) { ... }"
+                },
+                {
+                    type: "explain",
+                    emoji: "📦",
+                    title: "객체로 여러 정보 저장하기",
+                    content: `
+                        <p><strong>객체</strong>는 여러 속성을 함께 저장해요.</p>
+                        <p>구름은 위치(x, y)와 크기(width, height)가 필요해요!</p>
+                    `,
+                    code: `// 구름 객체들의 배열
+var clouds = [
+    {x_pos: 100, y_pos: 80, width: 80},
+    {x_pos: 300, y_pos: 60, width: 100},
+    {x_pos: 500, y_pos: 90, width: 70}
+];
+
+// 구름 그리기
+for (var i = 0; i < clouds.length; i++) {
+    fill(255);  // 흰색
+    ellipse(clouds[i].x_pos, clouds[i].y_pos,
+            clouds[i].width, 40);
+}`
+                },
+                {
+                    type: "interactive",
+                    emoji: "🖌️",
+                    title: "구름 그리기",
+                    content: `<p>구름 배열에 값을 추가해보세요!</p>`,
+                    defaultCode: `background(100, 155, 255);
+noStroke();
+
+// 구름들
+var clouds = [
+    {x: 50, y: 40},
+    {x: 150, y: 30}
+    // 여기에 추가해보세요!
+];
+
+// 구름 그리기
+for (var i = 0; i < clouds.length; i++) {
+    fill(255);
+    ellipse(clouds[i].x - 20, clouds[i].y, 30, 20);
+    ellipse(clouds[i].x, clouds[i].y, 40, 25);
+    ellipse(clouds[i].x + 20, clouds[i].y, 30, 20);
+}
+
+// 땅
+fill(0, 155, 0);
+rect(0, 150, 250, 50);`,
+                    canvasSize: { w: 250, h: 200 }
+                },
+                {
+                    type: "build",
+                    emoji: "🔨",
+                    title: "직접 만들기: 나무 그리기",
+                    content: `<p>for문을 완성해서 모든 나무를 그려보세요!</p>`,
+                    starterCode: `var trees_x = [50, 120, 200];
+
+function setup() {
+    createCanvas(250, 200);
+}
+
+function draw() {
+    background(100, 155, 255);
+    noStroke();
+    fill(0, 155, 0);
+    rect(0, 150, 250, 50);
+
+    // 나무 그리기 - for문 완성하기!
+    for (var i = 0; i < trees_x.length; i++) {
+        // 나무 줄기 (갈색)
+        fill(130, 100, 0);
+        // rect 추가!
+
+
+        // 나무 잎 (초록)
+        fill(0, 150, 0);
+        triangle(
+            trees_x[i] - 15, 130,
+            trees_x[i] + 10, 90,
+            trees_x[i] + 35, 130
+        );
+    }
+}`,
+                    targetCode: `rect(trees_x[i], 130, 20, 30)`,
+                    answerCheck: (code) => {
+                        return code.includes('rect') &&
+                               code.includes('trees_x[i]');
+                    },
+                    hint: "rect(trees_x[i], y위치, 가로, 세로) - trees_x[i]가 현재 나무 X위치예요",
+                    canvasSize: { w: 250, h: 200 }
+                },
+                {
+                    type: "quiz",
+                    emoji: "🧠",
+                    title: "확인 퀴즈",
+                    question: "var arr = [10, 20, 30]; 일 때 arr.length는?",
+                    options: [
+                        "2",
+                        "3",
+                        "30",
+                        "undefined"
+                    ],
+                    correct: 1,
+                    explanation: "length는 배열의 길이(요소 개수)를 반환해요. [10, 20, 30]은 3개의 요소가 있으니 3!"
+                }
+            ]
+        },
+        {
+            day: 6,
+            title: "아이템 & 협곡",
+            subtitle: "수집 & 장애물",
+            icon: "💎",
+            xp: 90,
+            steps: [
+                {
+                    type: "intro",
+                    emoji: "🎯",
+                    title: "오늘의 목표",
+                    content: `
+                        <p>오늘 우리가 만들 것:</p>
+                        <div class="highlight-box success">
+                            💎 아이템 수집하기<br>
+                            • 캐릭터가 아이템에 닿으면 사라짐<br><br>
+                            🕳️ 협곡(구덩이)<br>
+                            • 빠지면 떨어짐!
+                        </div>
+                    `
+                },
+                {
+                    type: "explain",
+                    emoji: "📏",
+                    title: "dist() - 거리 계산하기",
+                    content: `
+                        <p><strong>dist(x1, y1, x2, y2)</strong>는 두 점 사이의 거리를 계산해요.</p>
+                        <p>캐릭터와 아이템이 가까우면 수집!</p>
+                    `,
+                    code: `var collectable = {
+    x_pos: 300,
+    y_pos: 200,
+    isFound: false
+};
+
+// 거리 계산
+var distance = dist(
+    gameChar_x, gameChar_y,
+    collectable.x_pos, collectable.y_pos
+);
+
+// 거리가 20 미만이면 수집!
+if (distance < 20) {
+    collectable.isFound = true;
+}`
+                },
+                {
+                    type: "practice",
+                    emoji: "✏️",
+                    title: "연습: 거리 조건문",
+                    content: `<p>두 점 사이 거리가 30 미만인지 확인하는 조건문을 써보세요.</p>`,
+                    starterCode: `var d = dist(x1, y1, x2, y2);
+
+// 거리가 30 미만이면 충돌!
+
+`,
+                    answer: "if (d < 30)",
+                    answerCheck: (code) => {
+                        return code.includes('if') &&
+                               code.includes('d') &&
+                               code.includes('<') &&
+                               code.includes('30');
+                    },
+                    hint: "if (거리변수 < 숫자) { ... }"
+                },
+                {
+                    type: "explain",
+                    emoji: "🕳️",
+                    title: "협곡 만들기",
+                    content: `
+                        <p>협곡은 땅에 구멍을 만들어요.</p>
+                        <p>캐릭터가 협곡 위에 있으면 떨어져요!</p>
+                    `,
+                    code: `var canyon = {x_pos: 200, width: 80};
+var isPlummeting = false;  // 추락중?
+
+// 협곡 그리기 (파란 물)
+fill(40, 130, 255);
+rect(canyon.x_pos, floorPos_y, canyon.width, 100);
+
+// 캐릭터가 협곡 위에 있는지 확인
+if (gameChar_x > canyon.x_pos &&
+    gameChar_x < canyon.x_pos + canyon.width) {
+    isPlummeting = true;  // 추락!
+}
+
+// 추락중이면 계속 떨어짐
+if (isPlummeting) {
+    gameChar_y += 10;
+}`
+                },
+                {
+                    type: "interactive",
+                    emoji: "🖌️",
+                    title: "아이템 수집 실험",
+                    content: `<p>캐릭터 위치(charX)를 바꿔서 아이템을 수집해보세요!</p>`,
+                    defaultCode: `var charX = 50;  // 이 값을 바꿔보세요!
+var charY = 130;
+var itemX = 150;
+var itemY = 130;
+var isFound = false;
+
+background(100, 155, 255);
+noStroke();
+fill(0, 155, 0);
+rect(0, 150, 250, 50);
+
+// 거리 계산
+var d = dist(charX, charY, itemX, itemY);
+if (d < 30) {
+    isFound = true;
+}
+
+// 아이템 (수집 안됐으면 보임)
+if (!isFound) {
+    fill(255, 200, 0);
+    ellipse(itemX, itemY, 25, 25);
+}
+
+// 캐릭터
+fill(200, 150, 150);
+ellipse(charX, charY - 20, 20);
+fill(255, 0, 0);
+rect(charX - 8, charY - 10, 16, 20);
+
+// 거리 표시
+fill(255);
+textSize(12);
+text("거리: " + Math.round(d), 10, 20);`,
+                    canvasSize: { w: 250, h: 200 }
+                },
+                {
+                    type: "build",
+                    emoji: "🔨",
+                    title: "직접 만들기: 아이템 수집",
+                    content: `<p>dist()를 사용해서 아이템 수집 기능을 만들어보세요!</p>`,
+                    starterCode: `var gameChar_x = 100;
+var item = {x: 150, y: 130, isFound: false};
+
+function setup() {
+    createCanvas(250, 200);
+}
+
+function draw() {
+    background(100, 155, 255);
+    noStroke();
+    fill(0, 155, 0);
+    rect(0, 150, 250, 50);
+
+    // 아이템 수집 체크 - 여기 완성!
+    // dist()로 거리 계산하고
+    // 거리가 25 미만이면 isFound = true
+
+
+    // 아이템 그리기
+    if (item.isFound == false) {
+        fill(255, 200, 0);
+        ellipse(item.x, item.y, 25, 25);
+    }
+
+    // 캐릭터
+    fill(200, 150, 150);
+    ellipse(gameChar_x, 130, 20);
+    fill(255, 0, 0);
+    rect(gameChar_x - 8, 120, 16, 20);
+}
+
+function keyPressed() {
+    if (keyCode == 39) gameChar_x += 20;
+    if (keyCode == 37) gameChar_x -= 20;
+}`,
+                    targetCode: `if (dist(gameChar_x, 130, item.x, item.y) < 25)`,
+                    answerCheck: (code) => {
+                        return code.includes('dist') &&
+                               code.includes('gameChar_x') &&
+                               code.includes('item') &&
+                               code.includes('isFound');
+                    },
+                    hint: "if (dist(gameChar_x, y, item.x, item.y) < 25) { item.isFound = true; }",
+                    canvasSize: { w: 250, h: 200 }
+                },
+                {
+                    type: "quiz",
+                    emoji: "🧠",
+                    title: "확인 퀴즈",
+                    question: "dist(0, 0, 3, 4)의 결과는?",
+                    options: [
+                        "7",
+                        "5",
+                        "12",
+                        "1"
+                    ],
+                    correct: 1,
+                    explanation: "피타고라스 정리! √(3² + 4²) = √(9 + 16) = √25 = 5"
+                }
+            ]
+        },
+        {
+            day: 7,
+            title: "카메라 스크롤",
+            subtitle: "세상을 넓히기",
+            icon: "🎥",
+            xp: 100,
+            steps: [
+                {
+                    type: "intro",
+                    emoji: "🎯",
+                    title: "오늘의 목표",
+                    content: `
+                        <p>오늘 우리가 만들 것:</p>
+                        <div class="highlight-box success">
+                            🎥 카메라 스크롤!<br><br>
+                            • 캐릭터가 화면 중앙에 있음<br>
+                            • 배경이 움직이는 것처럼 보임<br>
+                            • 더 넓은 게임 세계!
+                        </div>
+                    `
+                },
+                {
+                    type: "explain",
+                    emoji: "🎥",
+                    title: "translate() - 화면 이동",
+                    content: `
+                        <p><strong>translate(x, y)</strong>는 좌표계를 이동시켜요.</p>
+                        <p>캐릭터를 따라 화면을 이동시키면 스크롤 효과!</p>
+                    `,
+                    code: `// 카메라 위치 = 캐릭터 - 화면 절반
+var cameraPosX = gameChar_x - width/2;
+
+// 좌표계 이동
+push();  // 상태 저장
+translate(-cameraPosX, 0);
+
+// 여기에 배경 그리기
+// (나무, 구름, 산, 협곡 등)
+
+pop();   // 상태 복원`
+                },
+                {
+                    type: "explain",
+                    emoji: "💾",
+                    title: "push() & pop()",
+                    content: `
+                        <p><strong>push()</strong>는 현재 설정을 저장해요.</p>
+                        <p><strong>pop()</strong>은 저장한 설정을 복원해요.</p>
+                        <div class="highlight-box">
+                            <strong>왜 필요할까요?</strong><br>
+                            translate 후 원래대로 돌아가야<br>
+                            캐릭터가 화면 중앙에 그려져요!
+                        </div>
+                    `,
+                    code: `function draw() {
+    background(100, 155, 255);
+
+    cameraPosX = gameChar_x - width/2;
+
+    push();
+    translate(-cameraPosX, 0);
+
+    // === 스크롤되는 것들 ===
+    // 땅, 나무, 구름, 산, 아이템, 협곡
+
+    pop();
+
+    // === 스크롤 안 되는 것들 ===
+    // UI, 점수 등
+}`
+                },
+                {
+                    type: "interactive",
+                    emoji: "🖌️",
+                    title: "translate 실험",
+                    content: `<p>translateX 값을 바꿔보세요! 배경이 움직여요.</p>`,
+                    defaultCode: `var translateX = 0;  // 바꿔보세요!
+
+background(100, 155, 255);
+noStroke();
+
+push();
+translate(-translateX, 0);
+
+// 배경 (스크롤됨)
+fill(0, 155, 0);
+rect(0, 150, 500, 50);
+
+// 나무들
+fill(130, 100, 0);
+rect(50, 100, 20, 50);
+rect(150, 100, 20, 50);
+rect(250, 100, 20, 50);
+rect(350, 100, 20, 50);
+
+fill(0, 150, 0);
+for (var x = 50; x <= 350; x += 100) {
+    triangle(x-15, 120, x+10, 70, x+35, 120);
+}
+
+pop();
+
+// 캐릭터 (스크롤 안됨, 중앙에 고정)
+fill(200, 150, 150);
+ellipse(100, 130, 20);
+fill(255, 0, 0);
+rect(92, 120, 16, 20);`,
+                    canvasSize: { w: 200, h: 200 }
+                },
+                {
+                    type: "build",
+                    emoji: "🔨",
+                    title: "직접 만들기: 카메라 스크롤",
+                    content: `<p>push, translate, pop을 사용해서 스크롤을 구현해보세요!</p>
+                    <p class="editor-hint">💡 캔버스 클릭 후 ←→ 화살표를 눌러보세요!</p>`,
+                    starterCode: `var gameChar_x = 200;
+var cameraPosX = 0;
+
+function setup() {
+    createCanvas(200, 200);
+}
+
+function draw() {
+    background(100, 155, 255);
+    noStroke();
+
+    cameraPosX = gameChar_x - width/2;
+
+    // 여기에 push, translate, pop 추가!
+
+
+    // 땅 (넓게!)
+    fill(0, 155, 0);
+    rect(0, 150, 600, 50);
+
+    // 나무들
+    fill(130, 100, 0);
+    for (var x = 50; x <= 500; x += 100) {
+        rect(x, 100, 20, 50);
+    }
+
+    // translate 끝나는 곳에 pop!
+
+
+    // 캐릭터 (화면 중앙에!)
+    fill(200, 150, 150);
+    ellipse(width/2, 130, 20);
+    fill(255, 0, 0);
+    rect(width/2 - 8, 120, 16, 20);
+}
+
+function keyPressed() {
+    if (keyCode == 37) gameChar_x -= 30;
+    if (keyCode == 39) gameChar_x += 30;
+}`,
+                    targetCode: `push(); translate(-cameraPosX, 0);`,
+                    answerCheck: (code) => {
+                        return code.includes('push()') &&
+                               code.includes('translate') &&
+                               code.includes('cameraPosX') &&
+                               code.includes('pop()');
+                    },
+                    hint: "push(); translate(-cameraPosX, 0); ... pop();",
+                    canvasSize: { w: 200, h: 200 }
+                },
+                {
+                    type: "intro",
+                    emoji: "🎓",
+                    title: "축하해요!",
+                    content: `
+                        <p>7일 동안 게임을 만들었어요!</p>
+                        <div class="highlight-box success">
+                            ✅ Day 1: 캔버스 & 배경<br>
+                            ✅ Day 2: 캐릭터 그리기<br>
+                            ✅ Day 3: 키보드 입력<br>
+                            ✅ Day 4: 점프 & 중력<br>
+                            ✅ Day 5: 배경 꾸미기<br>
+                            ✅ Day 6: 아이템 & 협곡<br>
+                            ✅ Day 7: 카메라 스크롤
+                        </div>
+                        <p>이제 게임 프로젝트 코드를 이해할 수 있어요! 🎮</p>
+                    `
+                },
+                {
+                    type: "quiz",
+                    emoji: "🧠",
+                    title: "마지막 퀴즈",
+                    question: "translate() 사용 후 원래대로 돌리려면?",
+                    options: [
+                        "reset()",
+                        "pop()",
+                        "restore()",
+                        "undo()"
+                    ],
+                    correct: 1,
+                    explanation: "push()로 저장하고 pop()으로 복원해요. translate 전에 push, 후에 pop!"
+                }
+            ]
+        }
+    ];
+
+    // ==========================================
+    // STATE
+    // ==========================================
+    let state = {
+        xp: 0,
+        streak: 0,
+        completedDays: [],
+        dayProgress: {},
+        lastVisit: null
+    };
+
+    let currentDay = null;
+    let currentStep = 0;
+    let quizAnswered = false;
+    let currentP5Instance = null;
+    let codeEditor = null;
+    let wrongAttempts = 0;
+
+    // ==========================================
+    // INIT
+    // ==========================================
+    function init() {
+        loadState();
+        checkStreak();
+        renderHome();
+        updateStats();
+        drawFinalGamePreview();
+    }
+
+    function loadState() {
+        const saved = localStorage.getItem('p5js_game_v4');
+        if (saved) {
+            state = { ...state, ...JSON.parse(saved) };
+        }
+    }
+
+    function saveState() {
+        localStorage.setItem('p5js_game_v4', JSON.stringify(state));
+    }
+
+    // ==========================================
+    // SETTINGS & API
+    // ==========================================
+    function openSettings() {
+        const modal = document.getElementById('settings-modal');
+        const input = document.getElementById('api-key-input');
+        const savedKey = localStorage.getItem('gemini_api_key');
+        if (savedKey) input.value = savedKey;
+        modal.style.display = 'flex';
+    }
+
+    function closeSettings() {
+        document.getElementById('settings-modal').style.display = 'none';
+    }
+
+    function saveSettings() {
+        const key = document.getElementById('api-key-input').value.trim();
+        if (key) {
+            localStorage.setItem('gemini_api_key', key);
+        } else {
+            localStorage.removeItem('gemini_api_key');
+        }
+        closeSettings();
+    }
+
+    function toggleApiKeyVisibility() {
+        const input = document.getElementById('api-key-input');
+        input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    // AI Chat
+    let aiChatHistory = [];
+    let aiChatVisible = false;
+
+    function openAIChat() {
+        const apiKey = localStorage.getItem('gemini_api_key');
+        if (!apiKey) {
+            alert('API 키가 없습니다. 설정에서 Gemini API 키를 입력해주세요.');
+            openSettings();
+            return;
+        }
+
+        const container = document.getElementById('ai-hint-container');
+        if (!container) return;
+
+        if (aiChatVisible) {
+            closeAIChat();
+            return;
+        }
+
+        aiChatHistory = [];
+        aiChatVisible = true;
+
+        container.innerHTML = `
+            <div class="ai-chat-container" id="ai-chat-box">
+                <div class="ai-chat-header">
+                    <div class="ai-chat-header-title">
+                        <div class="gemini-icon"></div>
+                        <span>Gemini</span>
+                    </div>
+                    <button class="ai-chat-close" onclick="closeAIChat()">✕</button>
+                </div>
+                <div class="ai-chat-messages" id="ai-chat-messages">
+                    <div class="ai-chat-message ai">
+                        <div class="avatar"></div>
+                        <div class="bubble">안녕하세요! 코드에 대해 궁금한 점이 있으면 질문해주세요.</div>
+                    </div>
+                </div>
+                <div class="ai-chat-input-area">
+                    <div class="ai-chat-input-wrapper">
+                        <input type="text" class="ai-chat-input" id="ai-chat-input" placeholder="메시지를 입력하세요..." onkeypress="if(event.key==='Enter')sendAIMessage()">
+                        <button class="ai-chat-send" onclick="sendAIMessage()">➤</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.getElementById('ai-chat-input').focus();
+    }
+
+    function closeAIChat() {
+        const container = document.getElementById('ai-hint-container');
+        if (container) container.innerHTML = '';
+        aiChatVisible = false;
+        aiChatHistory = [];
+    }
+
+    async function sendAIMessage() {
+        const input = document.getElementById('ai-chat-input');
+        const messagesDiv = document.getElementById('ai-chat-messages');
+        const userMessage = input.value.trim();
+
+        if (!userMessage) return;
+
+        // Add user message to UI
+        messagesDiv.innerHTML += `
+            <div class="ai-chat-message user">
+                <div class="avatar">👤</div>
+                <div class="bubble">${escapeHtml(userMessage)}</div>
+            </div>
+        `;
+        input.value = '';
+
+        // Add loading indicator
+        messagesDiv.innerHTML += `<div class="ai-loading" id="ai-loading">Gemini가 생각하는 중...</div>`;
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+        // Build context
+        const step = currentDay.steps[currentStep];
+        const userCode = codeEditor ? codeEditor.getValue() : '';
+
+        // Add to history
+        aiChatHistory.push({ role: 'user', parts: [{ text: userMessage }] });
+
+        const systemContext = `당신은 친절한 p5.js 프로그래밍 튜터입니다.
+- 정답을 직접 알려주지 말고 힌트로 유도하세요
+- 쉬운 한국어로 짧게 설명하세요 (2-4문장)
+- 격려하는 말투를 사용하세요
+
+현재 문제: ${step.question || step.instruction || step.title}
+${step.hint ? `힌트: ${step.hint}` : ''}
+${step.answer ? `정답: ${step.answer}` : ''}
+
+학생의 코드:
+\`\`\`javascript
+${userCode}
+\`\`\``;
+
+        try {
+            const apiKey = localStorage.getItem('gemini_api_key');
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [
+                        { role: 'user', parts: [{ text: systemContext }] },
+                        { role: 'model', parts: [{ text: '네, 이해했습니다. 학생을 도와드릴게요!' }] },
+                        ...aiChatHistory
+                    ],
+                    generationConfig: { maxOutputTokens: 2048 }
+                })
+            });
+
+            const data = await response.json();
+            console.log('API Response:', data);
+
+            // Remove loading
+            document.getElementById('ai-loading')?.remove();
+
+            if (data.error) {
+                throw new Error(data.error.message);
+            }
+
+            const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || '응답을 받지 못했어요.';
+
+            // Add to history
+            aiChatHistory.push({ role: 'model', parts: [{ text: aiResponse }] });
+
+            // Add AI message to UI
+            messagesDiv.innerHTML += `
+                <div class="ai-chat-message ai">
+                    <div class="avatar"></div>
+                    <div class="bubble">${aiResponse.replace(/\n/g, '<br>')}</div>
+                </div>
+            `;
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+        } catch (error) {
+            console.error('AI Chat Error:', error);
+            document.getElementById('ai-loading')?.remove();
+            messagesDiv.innerHTML += `
+                <div class="ai-chat-message ai">
+                    <div class="avatar"></div>
+                    <div class="bubble" style="border: 1px solid #f28b82;">❌ 오류: ${error.message}</div>
+                </div>
+            `;
+        }
+    }
+
+    // Keep old function name for button compatibility
+    function getAIHint(problemType) {
+        openAIChat();
+    }
+
+    function checkStreak() {
+        const today = new Date().toDateString();
+        if (state.lastVisit !== today) {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            if (state.lastVisit === yesterday.toDateString()) {
+                state.streak++;
+            } else {
+                state.streak = 1;
+            }
+            state.lastVisit = today;
+            saveState();
+        }
+    }
+
+    function updateStats() {
+        document.getElementById('xp-display').textContent = state.xp;
+        document.getElementById('streak-display').textContent = state.streak;
+    }
+
+    function drawFinalGamePreview() {
+        const container = document.getElementById('final-game-preview');
+        new p5((p) => {
+            let charX = 150;
+            let dir = 1;
+            p.setup = function() {
+                p.createCanvas(300, 150);
+            };
+            p.draw = function() {
+                p.background(100, 155, 255);
+                p.noStroke();
+
+                // Mountain
+                p.fill(0, 100, 0);
+                p.triangle(20, 112, 70, 40, 120, 112);
+                p.triangle(200, 112, 260, 30, 320, 112);
+
+                // Cloud
+                p.fill(255);
+                p.ellipse(180, 30, 40, 20);
+                p.ellipse(200, 30, 50, 25);
+                p.ellipse(220, 30, 40, 20);
+
+                // Ground
+                p.fill(0, 155, 0);
+                p.rect(0, 112, 300, 38);
+
+                // Tree
+                p.fill(130, 100, 0);
+                p.rect(250, 75, 15, 37);
+                p.fill(0, 150, 0);
+                p.triangle(235, 90, 257, 50, 280, 90);
+
+                // Character
+                charX += dir * 0.5;
+                if (charX > 250 || charX < 50) dir *= -1;
+
+                p.fill(200, 150, 150);
+                p.ellipse(charX, 112 - 35, 18);
+                p.fill(255, 0, 0);
+                p.rect(charX - 9, 112 - 26, 18, 22);
+                p.fill(0);
+                p.rect(charX - 12, 112 - 26, 4, 15);
+                p.rect(charX + 8, 112 - 26, 4, 15);
+                p.rect(charX - 10, 112 - 5, 7, 7);
+                p.rect(charX + 3, 112 - 5, 7, 7);
+
+                // Collectable
+                p.fill(255, 200, 0);
+                p.ellipse(100, 95, 15);
+            };
+        }, container);
+    }
+
+    // ==========================================
+    // HOME
+    // ==========================================
+    function renderHome() {
+        const list = document.getElementById('day-list');
+        list.innerHTML = '';
+
+        LESSONS.forEach((lesson, idx) => {
+            const isCompleted = state.completedDays.includes(lesson.day);
+            const isLocked = idx > 0 && !state.completedDays.includes(LESSONS[idx-1].day);
+            const progress = state.dayProgress[lesson.day] || 0;
+
+            const item = document.createElement('div');
+            item.className = `day-item ${isCompleted ? 'completed' : ''} ${isLocked ? 'locked' : ''}`;
+            item.innerHTML = `
+                <div class="day-icon">${lesson.icon}</div>
+                <div class="day-info">
+                    <h3>Day ${lesson.day}: ${lesson.title}</h3>
+                    <p>${lesson.subtitle}</p>
+                </div>
+                <div class="day-progress">
+                    ${isCompleted ? '✅ 완료' : isLocked ? '🔒' : `${progress}/${lesson.steps.length}`}
+                </div>
+            `;
+            if (!isLocked) {
+                item.onclick = () => startLesson(lesson.day);
+            }
+            list.appendChild(item);
+        });
+    }
+
+    function goHome() {
+        if (currentP5Instance) {
+            currentP5Instance.remove();
+            currentP5Instance = null;
+        }
+        document.getElementById('home-screen').classList.remove('hidden');
+        document.getElementById('lesson-screen').classList.remove('active');
+        renderHome();
+    }
+
+    // ==========================================
+    // LESSON
+    // ==========================================
+    function startLesson(dayNum) {
+        currentDay = LESSONS.find(l => l.day === dayNum);
+        currentStep = state.dayProgress[dayNum] || 0;
+        if (currentStep >= currentDay.steps.length) currentStep = 0;
+
+        document.getElementById('home-screen').classList.add('hidden');
+        document.getElementById('lesson-screen').classList.add('active');
+        document.getElementById('lesson-title-text').textContent = `Day ${currentDay.day}: ${currentDay.title}`;
+        document.getElementById('lesson-subtitle-text').textContent = currentDay.subtitle;
+
+        renderProgress();
+        renderStep();
+    }
+
+    function renderProgress() {
+        const container = document.getElementById('progress-steps');
+        container.innerHTML = '';
+        currentDay.steps.forEach((_, idx) => {
+            const step = document.createElement('div');
+            step.className = 'progress-step';
+            if (idx < currentStep) step.classList.add('completed');
+            if (idx === currentStep) step.classList.add('current');
+            container.appendChild(step);
+        });
+        document.getElementById('progress-text').textContent = `${currentStep + 1} / ${currentDay.steps.length}`;
+    }
+
+    function renderStep() {
+        if (currentP5Instance) {
+            currentP5Instance.remove();
+            currentP5Instance = null;
+        }
+        codeEditor = null;
+        wrongAttempts = 0;
+
+        const step = currentDay.steps[currentStep];
+        const content = document.getElementById('step-content');
+        quizAnswered = false;
+
+        let html = `
+            <div class="step-emoji">${step.emoji}</div>
+            <h3 class="step-title">${step.title}</h3>
+            <div class="step-content">${step.content || ''}</div>
+        `;
+
+        // Code display for explain type
+        if (step.type === 'explain' && step.code) {
+            html += `<div class="code-readonly">${escapeHtml(step.code)}</div>`;
+        }
+
+        // Interactive editor
+        if (step.type === 'interactive' || step.type === 'build') {
+            html += `
+                <div class="code-preview-container">
+                    <div class="code-section">
+                        <div class="code-label">💻 코드</div>
+                        <div class="cm-wrapper"><div id="code-editor-container"></div></div>
+                    </div>
+                    <div class="preview-section">
+                        <div class="preview-label">👁️ 결과</div>
+                        <div class="preview-canvas-wrapper" id="preview-canvas"></div>
+                    </div>
+                </div>
+                <div class="btn-group" style="margin-bottom: 15px;">
+                    <button class="btn btn-run" onclick="runCode()">▶ 실행</button>
+                </div>
+            `;
+            if (step.type === 'build') {
+                html += `
+                    <div class="code-result" id="build-result"></div>
+                    <div class="btn-group" id="build-btns">
+                        <button class="btn btn-check" onclick="checkBuild()">확인하기 ✓</button>
+                        <button class="ai-hint-btn" onclick="getAIHint('build')">🤖 AI 힌트</button>
+                    </div>
+                `;
+                if (step.hint) {
+                    html += `<p class="editor-hint">💡 힌트: ${step.hint}</p>`;
+                }
+                html += `<div id="ai-hint-container"></div>`;
+            }
+        }
+
+        // Practice
+        if (step.type === 'practice') {
+            html += `
+                <div class="code-section">
+                    <div class="code-label">💻 코드 입력</div>
+                    <div class="code-editor" id="practice-editor-wrapper">
+                        <div id="practice-editor-container"></div>
+                        <div class="code-result" id="practice-result"></div>
+                    </div>
+                </div>
+                <div class="btn-group" id="practice-btns">
+                    <button class="btn btn-check" onclick="checkPractice()">확인하기 ✓</button>
+                    <button class="ai-hint-btn" onclick="getAIHint('practice')">🤖 AI 힌트</button>
+                </div>
+                <p class="editor-hint">💡 힌트: ${step.hint}</p>
+                <div id="ai-hint-container"></div>
+            `;
+        }
+
+        // Quiz
+        if (step.type === 'quiz') {
+            html += `
+                <p style="font-size: 1.1rem; margin-bottom: 20px;">${step.question}</p>
+                <div class="quiz-options" id="quiz-options">
+                    ${step.options.map((opt, idx) => `
+                        <div class="quiz-option" onclick="selectQuiz(${idx})">${String.fromCharCode(65 + idx)}. ${opt}</div>
+                    `).join('')}
+                </div>
+                <div id="quiz-explanation" style="display:none; margin-top: 20px;"></div>
+            `;
+        }
+
+        content.innerHTML = html;
+
+        // Update buttons
+        const btnGroup = document.getElementById('btn-group');
+        if (step.type === 'practice' || step.type === 'build') {
+            btnGroup.innerHTML = '';
+        } else if (step.type === 'quiz') {
+            btnGroup.innerHTML = `<button class="btn btn-primary" id="next-btn" onclick="nextStep()" disabled>다음 →</button>`;
+        } else {
+            btnGroup.innerHTML = `<button class="btn btn-primary" onclick="nextStep()">다음 →</button>`;
+        }
+
+        // Initialize CodeMirror
+        setTimeout(() => {
+            if (step.type === 'interactive' || step.type === 'build') {
+                const el = document.getElementById('code-editor-container');
+                if (el) {
+                    codeEditor = CodeMirror(el, {
+                        value: step.starterCode || step.defaultCode || '',
+                        mode: 'javascript',
+                        theme: 'dracula',
+                        lineNumbers: true,
+                        matchBrackets: true,
+                        autoCloseBrackets: true,
+                        indentUnit: 4,
+                        tabSize: 4,
+                        lineWrapping: true
+                    });
+                    runCode();
+                }
+            }
+            if (step.type === 'practice') {
+                const el = document.getElementById('practice-editor-container');
+                if (el) {
+                    codeEditor = CodeMirror(el, {
+                        value: step.starterCode || '',
+                        mode: 'javascript',
+                        theme: 'dracula',
+                        lineNumbers: true,
+                        matchBrackets: true,
+                        autoCloseBrackets: true,
+                        indentUnit: 4,
+                        tabSize: 4,
+                        lineWrapping: true
+                    });
+                }
+            }
+            // Draw target preview
+            if (step.targetDraw) {
+                const targetContainer = document.getElementById(`day${currentDay.day}-target`);
+                if (targetContainer) {
+                    new p5((p) => {
+                        p.setup = function() {
+                            p.createCanvas(250, 180);
+                            p.noLoop();
+                        };
+                        p.draw = function() {
+                            step.targetDraw(p);
+                        };
+                    }, targetContainer);
+                }
+            }
+        }, 50);
+    }
+
+    function escapeHtml(text) {
+        return text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // ==========================================
+    // CODE EXECUTION
+    // ==========================================
+    function runCode() {
+        const step = currentDay.steps[currentStep];
+        const code = codeEditor ? codeEditor.getValue() : '';
+        const container = document.getElementById('preview-canvas');
+
+        if (currentP5Instance) {
+            currentP5Instance.remove();
+            currentP5Instance = null;
+        }
+        container.innerHTML = '';
+
+        const canvasW = step.canvasSize?.w || 200;
+        const canvasH = step.canvasSize?.h || 200;
+
+        try {
+            currentP5Instance = new p5((p) => {
+                // Make all p5 functions available
+                const sketch = new Function('p', `
+                    with(p) {
+                        ${code}
+                    }
+                `);
+
+                p.setup = function() {
+                    p.createCanvas(canvasW, canvasH);
+                    if (!code.includes('function setup') && !code.includes('function draw')) {
+                        p.background(100, 155, 255);
+                        p.noStroke();
+                        try { sketch(p); } catch(e) {}
+                        p.noLoop();
+                    }
+                };
+
+                if (code.includes('function draw')) {
+                    p.draw = function() {
+                        try { sketch(p); } catch(e) {}
+                    };
+                }
+            }, container);
+        } catch (e) {
+            container.innerHTML = '<p style="color: #ef4444; padding: 20px;">코드 오류!</p>';
+        }
+    }
+
+    // ==========================================
+    // PRACTICE CHECK
+    // ==========================================
+    function checkPractice() {
+        const step = currentDay.steps[currentStep];
+        const code = codeEditor ? codeEditor.getValue() : '';
+        const result = document.getElementById('practice-result');
+        const wrapper = document.getElementById('practice-editor-wrapper');
+
+        let isCorrect = false;
+        if (step.answerCheck) {
+            isCorrect = step.answerCheck(code);
+        } else {
+            const normalize = (s) => s.replace(/\s+/g, '').replace(/;/g, '').toLowerCase();
+            isCorrect = code.includes(step.answer) || normalize(code).includes(normalize(step.answer));
+        }
+
+        if (isCorrect) {
+            playSound('success');
+            wrapper.classList.remove('wrong');
+            wrapper.classList.add('correct');
+            result.className = 'code-result success';
+            result.textContent = '✅ 정답!';
+
+            document.getElementById('practice-btns').innerHTML = `
+                <button class="btn btn-retry" onclick="retryPractice()">🔄 다시</button>
+                <button class="btn btn-primary" onclick="nextStep()">다음 →</button>
+            `;
+        } else {
+            wrongAttempts++;
+            wrapper.classList.add('wrong');
+            result.className = 'code-result error';
+
+            if (wrongAttempts >= 2) {
+                result.innerHTML = '❌ 다시 해보세요! <button onclick="showAnswer()" style="background:#6366f1;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;margin-left:10px;">💡 정답 보기</button>';
+            } else {
+                result.textContent = '❌ 다시 해보세요!';
+            }
+        }
+    }
+
+    function checkBuild() {
+        const step = currentDay.steps[currentStep];
+        const code = codeEditor ? codeEditor.getValue() : '';
+        const result = document.getElementById('build-result');
+
+        let isCorrect = step.answerCheck ? step.answerCheck(code) : code.includes(step.targetCode);
+
+        if (isCorrect) {
+            playSound('success');
+            result.className = 'code-result success';
+            result.textContent = '✅ 완성!';
+
+            document.getElementById('build-btns').innerHTML = `
+                <button class="btn btn-retry" onclick="location.reload()">🔄 다시</button>
+                <button class="btn btn-primary" onclick="nextStep()">다음 →</button>
+            `;
+        } else {
+            wrongAttempts++;
+            result.className = 'code-result error';
+
+            if (wrongAttempts >= 3) {
+                result.innerHTML = '❌ 힌트를 확인하세요! <button onclick="showBuildAnswer()" style="background:#6366f1;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;margin-left:10px;">💡 정답 보기</button>';
+            } else {
+                result.textContent = '❌ 다시 해보세요!';
+            }
+        }
+    }
+
+    function showAnswer() {
+        const step = currentDay.steps[currentStep];
+        if (codeEditor && step.answer) {
+            const currentCode = codeEditor.getValue();
+            codeEditor.setValue(currentCode + '\n\n// 정답:\n// ' + step.answer);
+        }
+        document.getElementById('practice-result').innerHTML = '📝 정답을 확인하세요!';
+        document.getElementById('practice-btns').innerHTML = `
+            <button class="btn btn-retry" onclick="retryPractice()">🔄 다시</button>
+            <button class="btn btn-primary" onclick="nextStep()">다음 →</button>
+        `;
+    }
+
+    function showBuildAnswer() {
+        const step = currentDay.steps[currentStep];
+        if (step.targetCode) {
+            document.getElementById('build-result').innerHTML = `📝 추가해야 할 코드: <code style="background:#0d1117;padding:5px 10px;border-radius:5px;">${escapeHtml(step.targetCode)}</code>`;
+        }
+        document.getElementById('build-btns').innerHTML = `
+            <button class="btn btn-retry" onclick="location.reload()">🔄 다시</button>
+            <button class="btn btn-primary" onclick="nextStep()">다음 →</button>
+        `;
+    }
+
+    function retryPractice() {
+        const step = currentDay.steps[currentStep];
+        if (codeEditor) {
+            codeEditor.setValue(step.starterCode || '');
+        }
+        document.getElementById('practice-result').textContent = '';
+        document.getElementById('practice-editor-wrapper').classList.remove('correct', 'wrong');
+        document.getElementById('practice-btns').innerHTML = `
+            <button class="btn btn-check" onclick="checkPractice()">확인하기 ✓</button>
+        `;
+        wrongAttempts = 0;
+    }
+
+    // ==========================================
+    // QUIZ
+    // ==========================================
+    function selectQuiz(idx) {
+        if (quizAnswered) return;
+
+        const step = currentDay.steps[currentStep];
+        const options = document.querySelectorAll('.quiz-option');
+        quizAnswered = true;
+
+        options.forEach((opt, i) => {
+            opt.onclick = null;
+            if (i === step.correct) opt.classList.add('correct');
+            else if (i === idx) opt.classList.add('wrong');
+        });
+
+        const isCorrect = idx === step.correct;
+        if (isCorrect) playSound('success');
+
+        const explanationDiv = document.getElementById('quiz-explanation');
+        if (explanationDiv && step.explanation) {
+            explanationDiv.innerHTML = `
+                <div class="highlight-box ${isCorrect ? 'success' : ''}">
+                    <strong>${isCorrect ? '✅ 정답!' : '❌ 오답!'}</strong><br>
+                    ${step.explanation}
+                </div>
+            `;
+            explanationDiv.style.display = 'block';
+        }
+
+        document.getElementById('next-btn').disabled = false;
+    }
+
+    // ==========================================
+    // NAVIGATION
+    // ==========================================
+    function nextStep() {
+        currentStep++;
+        state.dayProgress[currentDay.day] = currentStep;
+        saveState();
+
+        if (currentStep >= currentDay.steps.length) {
+            completeDay();
+        } else {
+            renderProgress();
+            renderStep();
+            window.scrollTo(0, 0);
+        }
+    }
+
+    function completeDay() {
+        if (!state.completedDays.includes(currentDay.day)) {
+            state.completedDays.push(currentDay.day);
+            state.xp += currentDay.xp;
+            saveState();
+            updateStats();
+        }
+        showReward(currentDay.xp, currentDay.icon);
+    }
+
+    // ==========================================
+    // REWARD
+    // ==========================================
+    function showReward(xp, emoji) {
+        playSound('success');
+        document.getElementById('reward-emoji').textContent = emoji;
+        document.getElementById('reward-xp').textContent = `+${xp} XP`;
+        document.getElementById('reward-overlay').classList.add('active');
+        createConfetti();
+    }
+
+    function closeReward() {
+        document.getElementById('reward-overlay').classList.remove('active');
+        goHome();
+    }
+
+    function createConfetti() {
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const pieces = [];
+        const colors = ['#6366f1', '#f472b6', '#fbbf24', '#10b981'];
+
+        for (let i = 0; i < 100; i++) {
+            pieces.push({
+                x: Math.random() * canvas.width,
+                y: -20,
+                size: Math.random() * 8 + 4,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                speed: Math.random() * 3 + 2,
+                angle: Math.random() * Math.PI * 2
+            });
+        }
+
+        let frame = 0;
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            pieces.forEach(p => {
+                p.y += p.speed;
+                p.angle += 0.1;
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.angle);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                ctx.restore();
+            });
+            frame++;
+            if (frame < 150) requestAnimationFrame(animate);
+            else ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        animate();
+    }
+
+    // ==========================================
+    // SAVE/LOAD
+    // ==========================================
+    function exportProgress() {
+        const data = JSON.stringify(state, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `game_backup_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        const msg = document.getElementById('save-msg');
+        msg.textContent = '✅ 백업 완료!';
+        msg.classList.add('show');
+        setTimeout(() => msg.classList.remove('show'), 3000);
+    }
+
+    function importProgress(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                state = { ...state, ...JSON.parse(e.target.result) };
+                saveState();
+                updateStats();
+                renderHome();
+                const msg = document.getElementById('save-msg');
+                msg.textContent = '✅ 복원 완료!';
+                msg.classList.add('show');
+                setTimeout(() => msg.classList.remove('show'), 3000);
+            } catch (err) {
+                alert('파일을 읽을 수 없어요');
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
