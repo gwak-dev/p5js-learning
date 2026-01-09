@@ -20,15 +20,16 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --primary: #3b82f6;
+            --primary: #a3e635;
+            --primary-dim: #84cc16;
             --success: #22c55e;
             --error: #ef4444;
-            --bg: #000;
-            --surface: #0a0a0a;
-            --card: #111;
-            --border: #222;
-            --text: #fff;
-            --muted: #888;
+            --bg: #0f0f0f;
+            --surface: #161616;
+            --card: #1a1a1a;
+            --border: #2a2a2a;
+            --text: #f5f5f5;
+            --muted: #737373;
         }
 
         body {
@@ -432,11 +433,12 @@
 
         .btn-primary {
             background: var(--primary);
-            color: white;
+            color: #0f0f0f;
+            font-weight: 600;
         }
 
         .btn-primary:hover {
-            background: #2563eb;
+            background: var(--primary-dim);
         }
 
         .btn-check {
@@ -713,6 +715,8 @@
             right: 0;
             top: 0;
             width: 360px;
+            min-width: 280px;
+            max-width: 600px;
             height: 100vh;
             background: var(--surface);
             border-left: 1px solid var(--border);
@@ -723,6 +727,24 @@
         }
         .ai-sidebar.collapsed {
             transform: translateX(100%);
+        }
+        .ai-sidebar.resizing {
+            transition: none;
+        }
+        .ai-resize-handle {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 6px;
+            height: 100%;
+            cursor: ew-resize;
+            background: transparent;
+            z-index: 10;
+        }
+        .ai-resize-handle:hover,
+        .ai-resize-handle.active {
+            background: var(--primary);
+            opacity: 0.5;
         }
         .ai-sidebar-toggle {
             position: fixed;
@@ -742,7 +764,7 @@
             color: var(--muted);
             font-size: 0.9rem;
             z-index: 201;
-            transition: all 0.3s ease;
+            transition: right 0.3s ease;
         }
         .ai-sidebar.collapsed + .ai-sidebar-toggle,
         .ai-sidebar-toggle.collapsed {
@@ -750,7 +772,7 @@
         }
         .ai-sidebar-toggle:hover {
             background: var(--surface);
-            color: var(--text);
+            color: var(--primary);
         }
         .ai-chat-header {
             background: var(--card);
@@ -852,7 +874,7 @@
         .ai-chat-send {
             background: var(--primary);
             border: none;
-            color: white;
+            color: #0f0f0f;
             width: 32px;
             height: 32px;
             border-radius: 50%;
@@ -864,7 +886,7 @@
             transition: all 0.2s;
         }
         .ai-chat-send:hover {
-            background: #2563eb;
+            background: var(--primary-dim);
         }
         .ai-chat-send:disabled {
             background: #333;
@@ -964,16 +986,6 @@
             </div>
 
             <div class="day-list" id="day-list"></div>
-
-            <div class="save-section">
-                <h3>💾 진행상황 저장</h3>
-                <div class="save-btns">
-                    <button class="save-btn export" onclick="exportProgress()">📤 백업</button>
-                    <button class="save-btn import" onclick="document.getElementById('import-file').click()">📥 복원</button>
-                    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importProgress(event)">
-                </div>
-                <div class="save-msg" id="save-msg"></div>
-            </div>
         </div>
 
         <!-- Lesson Screen -->
@@ -1002,6 +1014,7 @@
 
     <!-- Fixed AI Sidebar -->
     <div class="ai-sidebar" id="ai-sidebar">
+        <div class="ai-resize-handle" id="ai-resize-handle"></div>
         <div class="ai-chat-header">
             <div class="ai-chat-header-title">
                 <div class="gemini-icon"></div>
@@ -2485,6 +2498,7 @@ function keyPressed() {
         updateStats();
         drawFinalGamePreview();
         checkApiKey();
+        initSidebarResize();
 
         // Auto-collapse sidebar on mobile
         if (window.innerWidth <= 1200) {
@@ -2557,6 +2571,47 @@ function keyPressed() {
         }
     }
 
+    // Sidebar resize functionality
+    let sidebarWidth = 360;
+    function initSidebarResize() {
+        const handle = document.getElementById('ai-resize-handle');
+        const sidebar = document.getElementById('ai-sidebar');
+        const toggle = document.getElementById('ai-sidebar-toggle');
+        const wrapper = document.getElementById('main-wrapper');
+
+        let isResizing = false;
+
+        handle.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            sidebar.classList.add('resizing');
+            handle.classList.add('active');
+            document.body.style.cursor = 'ew-resize';
+            document.body.style.userSelect = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+
+            const newWidth = window.innerWidth - e.clientX;
+            if (newWidth >= 280 && newWidth <= 600) {
+                sidebarWidth = newWidth;
+                sidebar.style.width = newWidth + 'px';
+                toggle.style.right = newWidth + 'px';
+                wrapper.style.marginRight = newWidth + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                sidebar.classList.remove('resizing');
+                handle.classList.remove('active');
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        });
+    }
+
     // Check API key on load and show warning if needed
     function checkApiKey() {
         const apiKey = localStorage.getItem('gemini_api_key');
@@ -2565,7 +2620,7 @@ function keyPressed() {
             messagesDiv.innerHTML = `
                 <div class="ai-chat-message ai">
                     <div class="avatar"></div>
-                    <div class="bubble">AI 기능을 사용하려면 설정에서 Gemini API 키를 입력해주세요! ⚙️<br><br><button onclick="openSettings()" style="background:var(--primary);border:none;color:white;padding:8px 16px;border-radius:6px;cursor:pointer;">설정 열기</button></div>
+                    <div class="bubble">AI 기능을 사용하려면 설정에서 Gemini API 키를 입력해주세요! ⚙️<br><br><button onclick="openSettings()" style="background:var(--primary);border:none;color:#0f0f0f;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:600;">설정 열기</button></div>
                 </div>
             `;
         }
